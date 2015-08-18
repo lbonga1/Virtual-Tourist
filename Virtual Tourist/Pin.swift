@@ -29,8 +29,7 @@ class Pin: NSManagedObject {
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
-    
-    
+
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
         // Get the entity associated with "Pin" type.
         let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
@@ -40,4 +39,8 @@ class Pin: NSManagedObject {
         latitude = dictionary[Keys.Latitude] as! Double
         longitude = dictionary[Keys.Longitude] as! Double
     }
+}
+
+func == (lhs: Pin, rhs: Pin) -> Bool {
+    return lhs.hashValue == rhs.hashValue
 }

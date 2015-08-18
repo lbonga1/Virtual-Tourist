@@ -21,6 +21,8 @@
 		1AEAEA2A1B81ADB200F8C1B2 /* CoreDataStackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEAEA291B81ADB200F8C1B2 /* CoreDataStackManager.swift */; };
 		1AEAEA2C1B81AF7600F8C1B2 /* Pin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEAEA2B1B81AF7600F8C1B2 /* Pin.swift */; };
 		1AEAEA2E1B81B22E00F8C1B2 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEAEA2D1B81B22E00F8C1B2 /* Photo.swift */; };
+		1AEAEA301B82477A00F8C1B2 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEAEA2F1B82477A00F8C1B2 /* Annotation.swift */; };
+		1AEAEA331B82EC9700F8C1B2 /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1AEAEA311B82EC9700F8C1B2 /* Model.xcdatamodeld */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +54,8 @@
 		1AEAEA291B81ADB200F8C1B2 /* CoreDataStackManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataStackManager.swift; sourceTree = "<group>"; };
 		1AEAEA2B1B81AF7600F8C1B2 /* Pin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pin.swift; sourceTree = "<group>"; };
 		1AEAEA2D1B81B22E00F8C1B2 /* Photo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
+		1AEAEA2F1B82477A00F8C1B2 /* Annotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotation.swift; sourceTree = "<group>"; };
+		1AEAEA321B82EC9700F8C1B2 /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +101,8 @@
 			children = (
 				1AA096D51B7C560600AF358E /* AppDelegate.swift */,
 				1AA096DA1B7C560600AF358E /* MapViewController.swift */,
+				1AEAEA311B82EC9700F8C1B2 /* Model.xcdatamodeld */,
+				1AEAEA2F1B82477A00F8C1B2 /* Annotation.swift */,
 				1AEAEA251B819B9D00F8C1B2 /* FlickrClient.swift */,
 				1AEAEA291B81ADB200F8C1B2 /* CoreDataStackManager.swift */,
 				1AEAEA2B1B81AF7600F8C1B2 /* Pin.swift */,
@@ -248,8 +254,10 @@
 				1AEAEA2E1B81B22E00F8C1B2 /* Photo.swift in Sources */,
 				1AEAEA2C1B81AF7600F8C1B2 /* Pin.swift in Sources */,
 				1AEAEA2A1B81ADB200F8C1B2 /* CoreDataStackManager.swift in Sources */,
+				1AEAEA301B82477A00F8C1B2 /* Annotation.swift in Sources */,
 				1AA096D91B7C560600AF358E /* Virtual_Tourist.xcdatamodeld in Sources */,
 				1AEAEA281B819BB100F8C1B2 /* FlickrConstants.swift in Sources */,
+				1AEAEA331B82EC9700F8C1B2 /* Model.xcdatamodeld in Sources */,
 				1AA096D61B7C560600AF358E /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -467,6 +475,16 @@
 			);
 			currentVersion = 1AA096D81B7C560600AF358E /* Virtual_Tourist.xcdatamodel */;
 			path = Virtual_Tourist.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+		1AEAEA311B82EC9700F8C1B2 /* Model.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				1AEAEA321B82EC9700F8C1B2 /* Model.xcdatamodel */,
+			);
+			currentVersion = 1AEAEA321B82EC9700F8C1B2 /* Model.xcdatamodel */;
+			path = Model.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};

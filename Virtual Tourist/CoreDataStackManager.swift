@@ -9,7 +9,7 @@
 import Foundation
 import CoreData
 
-private let SQLITE_FILE_NAME = ""
+private let SQLITE_FILE_NAME = "VirtualTourist.sqlite"
 
 class CoreDataStackManager {
 
