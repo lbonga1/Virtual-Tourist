@@ -24,6 +24,9 @@ class Annotation: NSObject, MKAnnotation {
 //    var subtitle: String = ""
     
     func setCoordinate(newCoordinate: CLLocationCoordinate2D) {
+        willChangeValueForKey("coordinate")
         self.location = newCoordinate
+        didChangeValueForKey("coordinate")
     }
+
 }

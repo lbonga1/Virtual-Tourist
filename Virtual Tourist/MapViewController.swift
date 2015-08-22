@@ -15,6 +15,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
 // MARK: - Outlets
     @IBOutlet weak var mapView: MKMapView!
     
+// MARK: - Variables
     var pins = Set<Pin>()
     
     override func viewDidLoad() {
@@ -24,10 +25,43 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         var gesture: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
         gesture.minimumPressDuration = 1.0
         self.mapView.addGestureRecognizer(gesture)
+        
+        // Retrieve map region data
+        if let mapInfo: [ String : CLLocationDegrees ] = NSUserDefaults.standardUserDefaults().dictionaryForKey("mapInfo") as? [ String : CLLocationDegrees ] {
+            var mapRegion = MKCoordinateRegion(
+                center: CLLocationCoordinate2D(
+                    latitude: mapInfo[ "centerLatitude" ]!,
+                    longitude: mapInfo[ "centerLongitude" ]!
+                ),
+                span: MKCoordinateSpan(
+                    latitudeDelta: (mapInfo[ "spanLatitudeDelta" ]!),
+                    longitudeDelta: (mapInfo[ "spanLongitudeDelta" ]!)
+                )
+            )
+            mapView.region = mapRegion
+        } else {
+            println("Map info unavailable.")
+        }
     
     }
 
 // MARK: - MKMapViewDelegate
+    
+    // Saves map's region when changed.
+    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+        let mapRegionCenterLatitude: CLLocationDegrees = mapView.region.center.latitude
+        let mapRegionCenterLongitude: CLLocationDegrees = mapView.region.center.longitude
+        let mapRegionSpanLatitudeDelta: CLLocationDegrees = mapView.region.span.latitudeDelta
+        let mapRegionSpanLongitudeDelta: CLLocationDegrees = mapView.region.span.longitudeDelta
+        
+        var mapDictionary: [ String : CLLocationDegrees ] = [ String : CLLocationDegrees ]()
+        mapDictionary.updateValue(mapRegionCenterLatitude, forKey: "centerLatitude" )
+        mapDictionary.updateValue(mapRegionCenterLongitude, forKey: "centerLongitude" )
+        mapDictionary.updateValue(mapRegionSpanLatitudeDelta, forKey: "spanLatitudeDelta" )
+        mapDictionary.updateValue(mapRegionSpanLongitudeDelta, forKey: "spanLongitudeDelta" )
+        
+        NSUserDefaults.standardUserDefaults().setObject(mapDictionary, forKey: "mapInfo" )
+    }
     
     // Creates a draggable annotation.
     func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
@@ -48,6 +82,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
         return nil
     }
+
     
     // Actions for selecting annotation
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
@@ -82,16 +117,24 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
 // MARK: - Additional Methods
     
     func addAnnotation(longPress: UIGestureRecognizer) {
-        if (longPress.state == UIGestureRecognizerState.Began) {
-            var touchPoint = longPress.locationInView(mapView)
-            var newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
-            let annotation = Annotation()
-            //annotation.coordinate = newCoordinates
+        var touchPoint = longPress.locationInView(mapView)
+        var newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
+        let annotation = Annotation()
+        
+        switch longPress.state {
+        case .Began:
             annotation.setCoordinate(newCoordinates)
             mapView.addAnnotation(annotation)
+        case .Changed:
+            annotation.setCoordinate(newCoordinates)
+        case .Ended:
+            //annotation.setCoordinate(newCoordinates)
+            // TODO: - Pre-fetch Flickr images
             
             // Save to Core Data
             self.saveContext()
+        default:
+            return
         }
     }
     
