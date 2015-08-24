@@ -14,21 +14,25 @@ import CoreData
 
 class Photo: NSManagedObject {
     
+//    struct Keys {
+//        static let imagePath = "image_path"
+//    }
+    
     // Promote from simple properties to Core Data attributes
     @NSManaged var pin: Pin?
-    @NSManaged var photoURL: String?
+    @NSManaged var imagePath: String
     
     // Core Data init method
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(photoURL: String, context: NSManagedObjectContext) {
+    init(imagePath: String, context: NSManagedObjectContext) {
         // Get the entity associated with "Photo" type.
         let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
         // Inherited init method
         super.init(entity: entity,insertIntoManagedObjectContext: context)
-        // Init dictionary properties
-        self.photoURL = photoURL
+//        // Init dictionary properties
+//        imagePath = dictionary[Keys.imagePath] as! String
     }
 }

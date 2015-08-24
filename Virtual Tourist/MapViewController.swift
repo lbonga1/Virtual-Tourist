@@ -44,6 +44,11 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
     
     }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+    
+    }
 
 // MARK: - MKMapViewDelegate
     
@@ -73,7 +78,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             if pinView == nil {
                 pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
                 pinView!.pinColor = .Green
-                pinView!.draggable = true
+                //pinView!.draggable = true
                 pinView!.animatesDrop = true
             } else {
                 pinView!.annotation = annotation
@@ -92,14 +97,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             
             var pinLat = view.annotation.coordinate.latitude
             var pinLon = view.annotation.coordinate.longitude
-            
-            // Add pin to set
-            let selectedPin = Pin()
             var select = "\(pinLat.hashValue),\(pinLon.hashValue)".hashValue
-            pins.insert(selectedPin)
-            
-            // Save to Core Data
-            self.saveContext()
             
             // Get PhotoViewController
             for pin in pins {
@@ -125,14 +123,21 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         case .Began:
             annotation.setCoordinate(newCoordinates)
             mapView.addAnnotation(annotation)
+            FlickrClient.sharedInstance().retrieveImages()
+            
         case .Changed:
             annotation.setCoordinate(newCoordinates)
+            
         case .Ended:
-            //annotation.setCoordinate(newCoordinates)
-            // TODO: - Pre-fetch Flickr images
+            annotation.setCoordinate(newCoordinates)
+            
+            // Add pin to set
+            let selectedPin = Pin()
+            pins.insert(selectedPin)
             
             // Save to Core Data
             self.saveContext()
+            
         default:
             return
         }
@@ -147,8 +152,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     func saveContext() {
         CoreDataStackManager.sharedInstance().saveContext()
     }
-
-
 
 }
 

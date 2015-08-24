@@ -61,6 +61,7 @@
         <!--Photo View Controller-->
         <scene sceneID="XBj-iL-zI4">
             <objects>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PIy-HZ-B8c" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="PhotoView" id="WFR-DM-5As" customClass="PhotoViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="1KN-4X-NLH"/>
@@ -93,14 +94,28 @@
                                             <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Uif-xa-QE5">
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Uif-xa-QE5">
                                                     <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                 </imageView>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="37J-zg-d6W">
+                                                    <rect key="frame" x="15" y="15" width="20" height="20"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
+                                        <constraints>
+                                            <constraint firstAttribute="trailingMargin" secondItem="Uif-xa-QE5" secondAttribute="trailing" constant="-8" id="016-dw-8xH"/>
+                                            <constraint firstItem="37J-zg-d6W" firstAttribute="top" secondItem="77E-xk-LIL" secondAttribute="topMargin" constant="7" id="9QE-nu-PPP"/>
+                                            <constraint firstItem="Uif-xa-QE5" firstAttribute="leading" secondItem="77E-xk-LIL" secondAttribute="leadingMargin" constant="-8" id="Dbq-Wo-RYZ"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="Uif-xa-QE5" secondAttribute="bottom" constant="-8" id="EHU-F6-DRW"/>
+                                            <constraint firstAttribute="trailingMargin" secondItem="37J-zg-d6W" secondAttribute="trailing" constant="7" id="EXt-iU-6P4"/>
+                                            <constraint firstItem="37J-zg-d6W" firstAttribute="leading" secondItem="77E-xk-LIL" secondAttribute="leadingMargin" constant="7" id="d8U-UJ-xsK"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="37J-zg-d6W" secondAttribute="bottom" constant="7" id="fz2-BF-YQK"/>
+                                            <constraint firstItem="Uif-xa-QE5" firstAttribute="top" secondItem="77E-xk-LIL" secondAttribute="topMargin" constant="-8" id="q5H-hO-09k"/>
+                                        </constraints>
                                         <connections>
-                                            <outlet property="photoView" destination="Uif-xa-QE5" id="x3z-un-3kh"/>
+                                            <outlet property="activityView" destination="37J-zg-d6W" id="UgK-wG-oPl"/>
+                                            <outlet property="photoView" destination="Uif-xa-QE5" id="Ivw-S7-nSA"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>
@@ -130,7 +145,6 @@
                         <barButtonItem key="backBarButtonItem" title="Back" id="0O6-Xe-Hnr"/>
                     </navigationItem>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="PIy-HZ-B8c" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1070" y="306"/>
         </scene>

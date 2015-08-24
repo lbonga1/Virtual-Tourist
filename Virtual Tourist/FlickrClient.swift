@@ -38,19 +38,14 @@ class FlickrClient: NSObject {
             if let error = downloadError {
                 println("Could not complete the request \(error)")
             } else {
-                
                 var parsingError: NSError? = nil
                 let parsedResult = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError) as! NSDictionary
                 
                 if let photosDictionary = parsedResult.valueForKey("photos") as? [String:AnyObject] {
-                    
                     if let totalPages = photosDictionary["pages"] as? Int {
-                        
-                        /* Flickr API - will only return up the 4000 images (100 per page * 40 page max) */
                         let pageLimit = min(totalPages, 40)
                         let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
                         self.getImageFromFlickrBySearchWithPage(methodArguments, pageNumber: randomPage)
-                        
                     } else {
                         println("Cant find key 'pages' in \(photosDictionary)")
                     }
@@ -82,7 +77,6 @@ class FlickrClient: NSObject {
                 let parsedResult = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError) as! NSDictionary
                 
                 if let photosDictionary = parsedResult.valueForKey("photos") as? [String:AnyObject] {
-                    
                     var totalPhotosVal = 0
                     if let totalPhotos = photosDictionary["total"] as? String {
                         totalPhotosVal = (totalPhotos as NSString).integerValue
@@ -90,7 +84,6 @@ class FlickrClient: NSObject {
                     
                     if totalPhotosVal > 0 {
                         if let photosArray = photosDictionary["photo"] as? [[String: AnyObject]] {
-                            
                             var count = 0
                             for photo in photosArray {
                                 // Grab 21 random images
@@ -104,8 +97,9 @@ class FlickrClient: NSObject {
                                     if let imageData = NSData(contentsOfURL: imageURL!) {
                                         dispatch_async(dispatch_get_main_queue(), {
                                             let finalImage = UIImage(data: imageData)
-                                            let photo = Photo(photoURL: imageUrlString!, context: self.sharedContext)
+                                            let photo = Photo(imagePath: imageUrlString!, context: self.sharedContext)
                                             Data.sharedInstance().photos.append(photo)
+                                            println("retrieved photo")
                                             count += 1
                                         })
                                     } else {
@@ -126,5 +120,17 @@ class FlickrClient: NSObject {
         }
         task.resume()
     }
+    
+// MARK: - Shared Instance
+    
+    class func sharedInstance() -> FlickrClient {
+        
+        struct Singleton {
+            static var sharedInstance = FlickrClient()
+        }
+        
+        return Singleton.sharedInstance
+    }
+
 
 }

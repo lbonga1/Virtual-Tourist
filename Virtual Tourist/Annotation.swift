@@ -20,9 +20,6 @@ class Annotation: NSObject, MKAnnotation {
         }
     }
     
-//    var title: String = ""
-//    var subtitle: String = ""
-    
     func setCoordinate(newCoordinate: CLLocationCoordinate2D) {
         willChangeValueForKey("coordinate")
         self.location = newCoordinate
