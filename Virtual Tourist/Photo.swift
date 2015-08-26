@@ -14,10 +14,6 @@ import CoreData
 
 class Photo: NSManagedObject {
     
-//    struct Keys {
-//        static let imagePath = "image_path"
-//    }
-    
     // Promote from simple properties to Core Data attributes
     @NSManaged var pin: Pin?
     @NSManaged var imagePath: String
@@ -27,12 +23,34 @@ class Photo: NSManagedObject {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(imagePath: String, context: NSManagedObjectContext) {
+    init(pin: Pin, dictionary: [String: AnyObject], context: NSManagedObjectContext) {
         // Get the entity associated with "Photo" type.
         let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
         // Inherited init method
         super.init(entity: entity,insertIntoManagedObjectContext: context)
-//        // Init dictionary properties
-//        imagePath = dictionary[Keys.imagePath] as! String
+        // Init dictionary properties
+        self.pin = pin
+        imagePath = dictionary["image_path"] as! String
     }
+    
+    var locationImage: UIImage? {
+        
+        get {
+            return FlickrClient.Caches.imageCache.imageWithIdentifier(imagePath)
+        }
+        
+        set {
+            FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: imagePath)
+        }
+    }
+    
+    //Delete the associated image file when the Photo managed object is deleted.
+    override func prepareForDeletion() {
+        let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+        let pathArray = [dirPath, imagePath]
+        let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+        NSFileManager.defaultManager().removeItemAtURL(fileURL, error: nil)
+        
+    }
+
 }

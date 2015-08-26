@@ -16,18 +16,19 @@ extension FlickrClient {
     
     struct Methods {
         static let PhotoSearch: String = "flickr.photos.search"
+        //static let Extras = "url_m"
+        static let SafeSearch = "1"
+        static let DataFormat = "json"
+        static let NoJsonCallback = "1"
+        static let PhotoLimit = "21"
     }
     
     struct Keys {
         static let ApiKey: String = "dbbc00ea0f8db209ae1ebb5233726e56"
-        static let Secret: String = "e853d3863b1c9068"
+        //static let Secret: String = "e853d3863b1c9068"
     }
     
-    struct Optionals {
-        static let Extras = "url_m"
-        static let SafeSearch = "1"
-        static let DataFormat = "json"
-        static let NoJsonCallback = "1"
+    struct BoundingBox {
         static let BoundingBoxHalfWidth = 1.0
         static let BoundingBoxHalfHeight = 1.0
         static let LatMin = -90.0

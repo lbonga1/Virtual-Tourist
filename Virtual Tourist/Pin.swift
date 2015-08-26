@@ -7,18 +7,20 @@
 //
 
 import UIKit
+import MapKit
 import CoreData
 
 // Make Pin available to Objective-C code
 @objc(Pin)
 
-class Pin: NSManagedObject {
-   
-    struct Keys {
-        static let Latitude = "latitude"
-        static let Longitude = "longitude"
-        static let Photos = "photos"
-    }
+class Pin: NSManagedObject, Hashable {
+    
+//    // Hashvalue to get PhotoViewController with correct pin's coordinates.
+//    override var hashValue: Int {
+//        get {
+//            return "\(latitude.hashValue),\(longitude.hashValue)".hashValue
+//        }
+//    }
     
     // Promote from simple properties to Core Data attributes
     @NSManaged var latitude: NSNumber
@@ -30,14 +32,14 @@ class Pin: NSManagedObject {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
 
-    init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
+    init(location: CLLocationCoordinate2D, context: NSManagedObjectContext) {
         // Get the entity associated with "Pin" type.
         let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
         // Inherited init method
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         // Init dictionary properties
-        latitude = dictionary[Keys.Latitude] as! Double
-        longitude = dictionary[Keys.Longitude] as! Double
+        latitude = location.latitude as Double
+        longitude = location.longitude as Double
     }
 }
 
