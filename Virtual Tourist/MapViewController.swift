@@ -17,6 +17,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     
 // MARK: - Variables
     var pins = Set<Pin>()
+    var annotationToBeAdded: Annotation? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,7 +70,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         NSUserDefaults.standardUserDefaults().setObject(mapDictionary, forKey: "mapInfo" )
     }
     
-    // Creates a draggable annotation.
+    // Create annotation.
     func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
         if annotation is Annotation {
             let reuseId = "pin"
@@ -79,7 +80,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             if pinView == nil {
                 pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
                 pinView!.pinColor = .Green
-                //pinView!.draggable = true
                 pinView!.animatesDrop = true
             } else {
                 pinView!.annotation = annotation
@@ -96,6 +96,8 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             mapView.deselectAnnotation(view.annotation, animated: true)
             println("pin tapped")
             
+            let selected = view.annotation
+            let lat = selected.coordinate.latitude
             var pinLat = view.annotation.coordinate.latitude
             var pinLon = view.annotation.coordinate.longitude
             var select = "\(pinLat.hashValue),\(pinLon.hashValue)".hashValue
@@ -110,6 +112,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
                     }
                 }
             }
+            
         }
     }
     
@@ -118,61 +121,62 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     func addAnnotation(longPress: UIGestureRecognizer) {
         var touchPoint = longPress.locationInView(mapView)
         var newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
-        let annotation = Annotation()
         
         switch longPress.state {
         case .Began:
-            annotation.setCoordinate(newCoordinates)
-            mapView.addAnnotation(annotation)
+            annotationToBeAdded = Annotation()
+            annotationToBeAdded!.setCoordinate(newCoordinates)
+            mapView.addAnnotation(annotationToBeAdded)
+            
             let pin = Pin(location: newCoordinates, context: self.sharedContext)
             let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
             
-            // Pre-fetch images from Flickr
-            FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
-                
-                // Handle the error case
-                if let error = error {
-                    println("Error searching for photos: \(error.localizedDescription)")
-                    return
-                }
-                
-                // Get a Swift dictionary from the JSON data
-                if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
-//                    // Get total pages
-//                    if let maxPages = photosDictionary["pages"] as? NSNumber {
-//                        pin.pages = maxPages
+//            // Pre-fetch images from Flickr
+//            FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
+//                
+//                // Handle the error case
+//                if let error = error {
+//                    println("Error searching for photos: \(error.localizedDescription)")
+//                    return
+//                }
+//                
+//                // Get a Swift dictionary from the JSON data
+//                if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
+////                    // Get total pages
+////                    if let maxPages = photosDictionary["pages"] as? NSNumber {
+////                        pin.pages = maxPages
+////                    }
+////                    // Get current page number
+////                    if let pageNumber = photosDictionary["page"] as? NSNumber {
+////                        pin.page = pageNumber
+////                    }
+//                    if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
+//                        // Build Photo array
+//                        var photos = photoDictionary.map() {
+//                            Photo(pin: pin, dictionary: $0, context: self.sharedContext)
+//                        }
+//                        
+//                        var error:NSError? = nil
+//                        
+//                        self.sharedContext.save(&error)
+//                        
+//                        if let error = error {
+//                            //self.alert("Error saving context")
+//                            println("error saving context: \(error.localizedDescription)")
+//                        }
 //                    }
-//                    // Get current page number
-//                    if let pageNumber = photosDictionary["page"] as? NSNumber {
-//                        pin.page = pageNumber
-//                    }
-                    if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
-                        // Build Photo array
-                        var photos = photoDictionary.map() {
-                            Photo(pin: pin, dictionary: $0, context: self.sharedContext)
-                        }
-                        
-                        var error:NSError? = nil
-                        
-                        self.sharedContext.save(&error)
-                        
-                        if let error = error {
-                            //self.alert("Error saving context")
-                            println("error saving context: \(error.localizedDescription)")
-                        }
-                    }
-                }
-            }
+//                }
+//            }
 
             
             // Save to Core Data
             self.saveContext()
             
         case .Changed:
-            annotation.setCoordinate(newCoordinates)
+            annotationToBeAdded!.setCoordinate(newCoordinates)
             
         case .Ended:
-            annotation.setCoordinate(newCoordinates)
+            annotationToBeAdded!.setCoordinate(newCoordinates)
             
             // Add pin to set
             let selectedPin = Pin()
@@ -204,9 +208,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     
 // MARK: - Core Data Convenience
     
-    lazy var sharedContext: NSManagedObjectContext =  {
-        return CoreDataStackManager.sharedInstance().managedObjectContext!
-        }()
+    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
     
     func saveContext() {
         CoreDataStackManager.sharedInstance().saveContext()

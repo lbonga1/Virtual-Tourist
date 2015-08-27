@@ -25,5 +25,4 @@ class Annotation: NSObject, MKAnnotation {
         self.location = newCoordinate
         didChangeValueForKey("coordinate")
     }
-
 }

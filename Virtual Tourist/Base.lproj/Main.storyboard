@@ -61,7 +61,6 @@
         <!--Photo View Controller-->
         <scene sceneID="XBj-iL-zI4">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="PIy-HZ-B8c" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="PhotoView" id="WFR-DM-5As" customClass="PhotoViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="1KN-4X-NLH"/>
@@ -79,7 +78,7 @@
                             </mapView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Ctv-aN-cKL">
                                 <rect key="frame" x="0.0" y="244" width="600" height="356"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="dWh-Wu-zq6">
                                     <size key="itemSize" width="50" height="50"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -119,7 +118,21 @@
                                         </connections>
                                     </collectionViewCell>
                                 </cells>
+                                <connections>
+                                    <outlet property="dataSource" destination="WFR-DM-5As" id="8fV-gg-aRH"/>
+                                    <outlet property="delegate" destination="WFR-DM-5As" id="0ry-j1-OEH"/>
+                                </connections>
                             </collectionView>
+                            <label opaque="NO" userInteractionEnabled="NO" alpha="0.5" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No photos to display." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="alz-Ir-xwW">
+                                <rect key="frame" x="150" y="375" width="200" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="CHz-ge-kfB"/>
+                                    <constraint firstAttribute="width" constant="200" id="shQ-vG-Pii"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VnW-l5-Hec">
                                 <rect key="frame" x="0.0" y="556" width="600" height="44"/>
                                 <items>
@@ -135,8 +148,10 @@
                             <constraint firstItem="Dkb-Dn-QQ3" firstAttribute="top" secondItem="Ctv-aN-cKL" secondAttribute="bottom" id="7bN-og-vaz"/>
                             <constraint firstAttribute="trailingMargin" secondItem="Jd2-Sk-Oc9" secondAttribute="trailing" constant="-16" id="8ve-Pf-TUz"/>
                             <constraint firstItem="Ctv-aN-cKL" firstAttribute="leading" secondItem="mvq-Bt-6vR" secondAttribute="leadingMargin" constant="-16" id="BKE-Du-0FL"/>
+                            <constraint firstItem="Ctv-aN-cKL" firstAttribute="centerX" secondItem="alz-Ir-xwW" secondAttribute="centerX" constant="50" id="GDB-uY-Suf"/>
                             <constraint firstItem="Jd2-Sk-Oc9" firstAttribute="top" secondItem="1KN-4X-NLH" secondAttribute="bottom" id="GQ2-3s-X8C"/>
                             <constraint firstItem="Ctv-aN-cKL" firstAttribute="top" secondItem="Jd2-Sk-Oc9" secondAttribute="bottom" id="Qyk-qo-gWb"/>
+                            <constraint firstItem="Ctv-aN-cKL" firstAttribute="centerY" secondItem="alz-Ir-xwW" secondAttribute="centerY" constant="27" id="sp8-VL-RxQ"/>
                             <constraint firstItem="Jd2-Sk-Oc9" firstAttribute="leading" secondItem="mvq-Bt-6vR" secondAttribute="leadingMargin" constant="-16" id="x0l-xo-Suo"/>
                             <constraint firstItem="Ctv-aN-cKL" firstAttribute="top" secondItem="Jd2-Sk-Oc9" secondAttribute="bottom" id="xxf-mU-83h"/>
                         </constraints>
@@ -144,7 +159,12 @@
                     <navigationItem key="navigationItem" id="GpG-7m-bKf">
                         <barButtonItem key="backBarButtonItem" title="Back" id="0O6-Xe-Hnr"/>
                     </navigationItem>
+                    <connections>
+                        <outlet property="collectionView" destination="Ctv-aN-cKL" id="kTO-4k-rTm"/>
+                        <outlet property="mapView" destination="Jd2-Sk-Oc9" id="M0v-hr-h4f"/>
+                    </connections>
                 </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PIy-HZ-B8c" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1070" y="306"/>
         </scene>
