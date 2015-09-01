@@ -17,7 +17,8 @@ class PhotoViewController: UIViewController {
     
 // MARK: - Variables
     
-    var pin: Pin!
+    var pin: Pin?
+    var photos = [Photo]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,22 +28,23 @@ class PhotoViewController: UIViewController {
     override func viewWillAppear(animated: Bool) {
         self.collectionView.reloadData()
         
-        if pin.photos.isEmpty {
+        if photos.isEmpty {
         
         }
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return pin.photos.count
+        return photos.count
     }
     
     // Collection View cell information
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         // Assigns custom cell.
-        let CellID = "PhotoCell"
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellID, forIndexPath: indexPath) as! CollectionViewCell
-        let photo = pin.photos[indexPath.item]
-        var photoImage = UIImage(named: "NoImage")
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! CollectionViewCell
+        let photo = photos[indexPath.item]
+        //var photoImage = UIImage(named: "NoImage")
+        //cell.activityView.hidesWhenStopped
+        
         
         return cell
     }

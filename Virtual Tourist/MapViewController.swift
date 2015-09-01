@@ -17,6 +17,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     
 // MARK: - Variables
     var pins = Set<Pin>()
+    var pin: Pin!
     var annotationToBeAdded: Annotation? = nil
     
     override func viewDidLoad() {
@@ -131,44 +132,41 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             let pin = Pin(location: newCoordinates, context: self.sharedContext)
             let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
             
-//            // Pre-fetch images from Flickr
-//            FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
-//                
-//                // Handle the error case
-//                if let error = error {
-//                    println("Error searching for photos: \(error.localizedDescription)")
-//                    return
-//                }
-//                
-//                // Get a Swift dictionary from the JSON data
-//                if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
-////                    // Get total pages
-////                    if let maxPages = photosDictionary["pages"] as? NSNumber {
-////                        pin.pages = maxPages
-////                    }
-////                    // Get current page number
-////                    if let pageNumber = photosDictionary["page"] as? NSNumber {
-////                        pin.page = pageNumber
-////                    }
-//                    if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
-//                        // Build Photo array
-//                        var photos = photoDictionary.map() {
-//                            Photo(pin: pin, dictionary: $0, context: self.sharedContext)
-//                        }
-//                        
-//                        var error:NSError? = nil
-//                        
-//                        self.sharedContext.save(&error)
-//                        
-//                        if let error = error {
-//                            //self.alert("Error saving context")
-//                            println("error saving context: \(error.localizedDescription)")
-//                        }
+            // Pre-fetch images from Flickr
+            FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
+                
+                // Handle the error case
+                if let error = error {
+                    println("Error searching for photos: \(error.localizedDescription)")
+                    return
+                }
+                
+                // Get a Swift dictionary from the JSON data
+                if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
+//                    // Get total pages
+//                    if let maxPages = photosDictionary["pages"] as? NSNumber {
+//                        pin.pages = maxPages
 //                    }
-//                }
-//            }
-
-            
+//                    // Get current page number
+//                    if let pageNumber = photosDictionary["page"] as? NSNumber {
+//                        pin.page = pageNumber
+//                    }
+                    if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
+                        // Build Photo array
+                        var photos = photoDictionary.map() {
+                            Photo(pin: pin, dictionary: $0, context: self.sharedContext)
+                        }
+                        var error:NSError? = nil
+                        
+                        self.sharedContext.save(&error)
+                        
+                        if let error = error {
+                            //self.alert("Error saving context")
+                            println("error saving context: \(error.localizedDescription)")
+                        }
+                    }
+                }
+            }
             // Save to Core Data
             self.saveContext()
             
@@ -202,7 +200,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             println("Error in fectchAllActors(): \(error)")
         }
         
-        // Return the results, cast to an array of Person objects
+        // Return the results, cast to an array of Pin objects
         return results as! [Pin]
     }
     

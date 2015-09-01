@@ -26,42 +26,42 @@ class FlickrClient: NSObject {
     
 // MARK: - Methods
     
-//    // Main Get method for flickr
-//    func taskForResource(parameters: [String : AnyObject], completionHandler: CompletionHander) -> NSURLSessionDataTask {
-//        
-//        var mutableParameters = parameters
-//        
-//        // Add in the API Key and set paramaters
-//        mutableParameters["method"] = Methods.PhotoSearch
-//        mutableParameters["api_key"] = Keys.ApiKey
-//        mutableParameters["lat"] = parameters["lat"] as! String
-//        mutableParameters["lon"] = parameters["lon"] as! String
-//        mutableParameters["per_page"] = Methods.PhotoLimit
-//        if let pageNumber = parameters["page"] as? String {
-//            mutableParameters["page"] = pageNumber
-//        }
-//        mutableParameters["format"] = Methods.DataFormat
-//        mutableParameters["nojsoncallback"] = Methods.NoJsonCallback
-//        mutableParameters["safe_search"] = Methods.SafeSearch
-//        
-//        
-//        let urlString = FlickrClient.BaseUrls.BaseUrl + FlickrClient.escapedParameters(mutableParameters)
-//        let url = NSURL(string: urlString)!
-//        let request = NSURLRequest(URL: url)
-//        
-//        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
-//            
-//            if let error = downloadError {
-//                completionHandler(result: nil, error: downloadError)
-//            } else {
-//                FlickrClient.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
-//            }
-//        }
-//        
-//        task.resume()
-//        
-//        return task
-//    }
+    // Main Get method for flickr
+    func taskForResource(parameters: [String : AnyObject], completionHandler: CompletionHander) -> NSURLSessionDataTask {
+        
+        var mutableParameters = parameters
+        
+        // Add in the API Key and set paramaters
+        mutableParameters["method"] = Methods.PhotoSearch
+        mutableParameters["api_key"] = Keys.ApiKey
+        mutableParameters["lat"] = parameters["lat"] as! String
+        mutableParameters["lon"] = parameters["lon"] as! String
+        mutableParameters["per_page"] = Methods.PhotoLimit
+        if let pageNumber = parameters["page"] as? String {
+            mutableParameters["page"] = pageNumber
+        }
+        mutableParameters["format"] = Methods.DataFormat
+        mutableParameters["nojsoncallback"] = Methods.NoJsonCallback
+        mutableParameters["safe_search"] = Methods.SafeSearch
+        
+        
+        let urlString = FlickrClient.BaseUrls.BaseUrl + FlickrClient.escapedParameters(mutableParameters)
+        let url = NSURL(string: urlString)!
+        let request = NSURLRequest(URL: url)
+        
+        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
+            
+            if let error = downloadError {
+                completionHandler(result: nil, error: downloadError)
+            } else {
+                FlickrClient.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
+            }
+        }
+        
+        task.resume()
+        
+        return task
+    }
 //
     
 //    func retrieveImages(){

@@ -10,8 +10,8 @@ import UIKit
 
 class Data: NSObject {
  
-    // Photos array
-    var photos: [Photo]!
+//    // Photos array
+//    var photos: [Photo]!
     
     var latitude = 0.0
     var longitude = 0.0

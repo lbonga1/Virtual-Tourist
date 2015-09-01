@@ -39,7 +39,7 @@ extension FlickrClient {
 
 
     /* Helper function: Given a dictionary of parameters, convert to a string for a url */
-    func escapedParameters(parameters: [String : AnyObject]) -> String {
+    class func escapedParameters(parameters: [String : AnyObject]) -> String {
         
         var urlVars = [String]()
         
