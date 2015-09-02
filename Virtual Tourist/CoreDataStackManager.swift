@@ -85,7 +85,6 @@ class CoreDataStackManager {
 // MARK: - Core Data Saving support
 
     func saveContext () {
-    
         if let context = self.managedObjectContext {
         
             var error: NSError? = nil

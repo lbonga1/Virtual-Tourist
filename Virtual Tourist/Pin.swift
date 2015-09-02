@@ -41,6 +41,7 @@ class Pin: NSManagedObject {
     }
 }
 
+// To conform to Equatable/Hashable protocol
 func == (lhs: Pin, rhs: Pin) -> Bool {
     return lhs.hashValue == rhs.hashValue
 }

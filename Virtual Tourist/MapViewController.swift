@@ -16,7 +16,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     @IBOutlet weak var mapView: MKMapView!
     
 // MARK: - Variables
-    var pins = Set<Pin>()
+    var pins = [Pin]()
     var pin: Pin!
     var annotationToBeAdded: Annotation? = nil
     
@@ -28,28 +28,14 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         gesture.minimumPressDuration = 1.0
         self.mapView.addGestureRecognizer(gesture)
         
-        // Retrieve map region data
-        if let mapInfo: [ String : CLLocationDegrees ] = NSUserDefaults.standardUserDefaults().dictionaryForKey("mapInfo") as? [ String : CLLocationDegrees ] {
-            var mapRegion = MKCoordinateRegion(
-                center: CLLocationCoordinate2D(
-                    latitude: mapInfo[ "centerLatitude" ]!,
-                    longitude: mapInfo[ "centerLongitude" ]!
-                ),
-                span: MKCoordinateSpan(
-                    latitudeDelta: (mapInfo[ "spanLatitudeDelta" ]!),
-                    longitudeDelta: (mapInfo[ "spanLongitudeDelta" ]!)
-                )
-            )
-            mapView.region = mapRegion
-        } else {
-            println("Map info unavailable.")
-        }
+        // Retrieve persisted map region and span data
+        self.getMapData()
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
     
-        //self.fetchAllPins()
+        self.fetchAllPins()
     }
 
 // MARK: - MKMapViewDelegate
@@ -61,26 +47,26 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         let mapRegionSpanLatitudeDelta: CLLocationDegrees = mapView.region.span.latitudeDelta
         let mapRegionSpanLongitudeDelta: CLLocationDegrees = mapView.region.span.longitudeDelta
         
-        var mapDictionary: [ String : CLLocationDegrees ] = [ String : CLLocationDegrees ]()
-        mapDictionary.updateValue(mapRegionCenterLatitude, forKey: "centerLatitude" )
-        mapDictionary.updateValue(mapRegionCenterLongitude, forKey: "centerLongitude" )
-        mapDictionary.updateValue(mapRegionSpanLatitudeDelta, forKey: "spanLatitudeDelta" )
-        mapDictionary.updateValue(mapRegionSpanLongitudeDelta, forKey: "spanLongitudeDelta" )
+        var mapDictionary: [String: CLLocationDegrees] = [String: CLLocationDegrees]()
+        mapDictionary.updateValue(mapRegionCenterLatitude, forKey: "centerLatitude")
+        mapDictionary.updateValue(mapRegionCenterLongitude, forKey: "centerLongitude")
+        mapDictionary.updateValue(mapRegionSpanLatitudeDelta, forKey: "spanLatitudeDelta")
+        mapDictionary.updateValue(mapRegionSpanLongitudeDelta, forKey: "spanLongitudeDelta")
         
-        NSUserDefaults.standardUserDefaults().setObject(mapDictionary, forKey: "mapInfo" )
+        NSUserDefaults.standardUserDefaults().setObject(mapDictionary, forKey: "mapInfo")
     }
     
     // Create annotation.
     func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
         if annotation is Annotation {
-            let reuseId = "pin"
         
-            var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+            var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier("pin") as? MKPinAnnotationView
         
             if pinView == nil {
-                pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+                pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
                 pinView!.pinColor = .Green
                 pinView!.animatesDrop = true
+                pinView!.canShowCallout = false
             } else {
                 pinView!.annotation = annotation
             }
@@ -96,11 +82,11 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             mapView.deselectAnnotation(view.annotation, animated: true)
             println("pin tapped")
             
-            let selected = view.annotation
-            let lat = selected.coordinate.latitude
+            let selectedPin = view.annotation
+            let lat = selectedPin.coordinate.latitude
             var pinLat = view.annotation.coordinate.latitude
             var pinLon = view.annotation.coordinate.longitude
-            var select = "\(pinLat.hashValue),\(pinLon.hashValue)".hashValue
+            var selectedHashValue = "\(pinLat.hashValue),\(pinLon.hashValue)".hashValue
             
             // Get PhotoViewController
             for pin in pins {
@@ -109,7 +95,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
 //
 //            performSegueWithIdentifier("ShowPhotos", sender: pin)
                 
-                if pin.hashValue == select.hashValue {
+                if pin.hashValue == selectedHashValue.hashValue {
                     dispatch_async(dispatch_get_main_queue()) {
                         self.performSegueWithIdentifier("ShowPhotos", sender: pin)
                     }
@@ -159,6 +145,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
                         }
                         var error:NSError? = nil
                         
+                        // Save to Core Data
                         self.sharedContext.save(&error)
                         
                         if let error = error {
@@ -168,8 +155,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
                     }
                 }
             }
-            // Save to Core Data
-            self.saveContext()
             
         case .Changed:
             annotationToBeAdded!.setCoordinate(newCoordinates)
@@ -177,12 +162,34 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         case .Ended:
             annotationToBeAdded!.setCoordinate(newCoordinates)
             
-            // Add pin to set
-            let selectedPin = Pin()
-            pins.insert(selectedPin)
+//             // Add pin to set
+//            let selectedPin = Pin()
+//            pins.insert(selectedPin)
+            
+            // Save to Core Data
+            self.saveContext()
             
         default:
             return
+        }
+    }
+    
+    // Retrieve persisted map region and span
+    func getMapData() {
+        if let mapInfo: [String : CLLocationDegrees] = NSUserDefaults.standardUserDefaults().dictionaryForKey("mapInfo") as? [String : CLLocationDegrees] {
+            var mapRegion = MKCoordinateRegion(
+                center: CLLocationCoordinate2D(
+                    latitude: mapInfo["centerLatitude"]!,
+                    longitude: mapInfo["centerLongitude"]!
+                ),
+                span: MKCoordinateSpan(
+                    latitudeDelta: (mapInfo["spanLatitudeDelta"]!),
+                    longitudeDelta: (mapInfo["spanLongitudeDelta"]!)
+                )
+            )
+            mapView.region = mapRegion
+        } else {
+            println("Map info unavailable.")
         }
     }
     
@@ -203,7 +210,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         
         // Add pins to the map
         
-        // FIX : - "NSArray element failed to match the Swift Array Element type
+        // FIXME: - "NSArray element failed to match the Swift Array Element type
         for pin in results {
             let annotationToBeAdded = Annotation()
             let pinLocation = CLLocationCoordinate2D(latitude: Double(pin.latitude), longitude: Double(pin.longitude))
@@ -212,6 +219,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
     }
     
+    // Prepare for segue to Photo View Controller
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "ShowPhotos" {
             let photoVC = segue.destinationViewController as!

@@ -45,11 +45,9 @@ class Photo: NSManagedObject {
     
     // Cached image
     var locationImage: UIImage? {
-        
         get {
             return FlickrClient.Caches.imageCache.imageWithIdentifier(imagePath)
         }
-        
         set {
             FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: imagePath)
         }
@@ -61,7 +59,5 @@ class Photo: NSManagedObject {
         let pathArray = [dirPath, imagePath]
         let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
         NSFileManager.defaultManager().removeItemAtURL(fileURL, error: nil)
-        
     }
-
 }

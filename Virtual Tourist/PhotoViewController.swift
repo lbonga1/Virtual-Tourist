@@ -26,6 +26,9 @@ class PhotoViewController: UIViewController {
     }
     
     override func viewWillAppear(animated: Bool) {
+        // Sets map region and span
+        self.setLocation()
+        
         self.collectionView.reloadData()
         
         if photos.isEmpty {
@@ -46,26 +49,29 @@ class PhotoViewController: UIViewController {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! CollectionViewCell
         let photo = photos[indexPath.item]
         
+        // Sets cell's image to cached photo if available
         if photo.locationImage != nil {
             cell.photoView.image = photo.locationImage
         } else {
+            // Sets cell's image to placeholder while retrieving photo
             cell.photoView.image = UIImage(named: "NoImage")
             cell.activityView.hidden = false
             cell.activityView.startAnimating()
             dispatch_async(dispatch_get_main_queue()) {
-                //get image
+                // Get image
                 let imageURL = NSURL(string: photo.imageURL)
                 let imageData = NSData(contentsOfURL: imageURL!)
                 let image = UIImage(data: imageData!)
                 
+                // Sets cell's image to retrieved photo and stores in cache
                 cell.activityView.stopAnimating()
                 cell.activityView.hidden = true
                 cell.photoView.image = image
                 photo.locationImage = image
                 
-                // save in core data
+                // Save in Core Data
                 var error:NSError? = nil
-                //self.saveContext()(&error)
+                self.sharedContext.save(&error)
                 
                 if let error = error {
                     println("error saving context: \(error.localizedDescription)")
@@ -80,13 +86,25 @@ class PhotoViewController: UIViewController {
     func collectionView(collectionView: UICollectionView, canEditItemAtIndexPath indexPath: NSIndexPath) -> Bool {
         return true
     }
-    
         
     // Changes cell opacity and updates delete button title when deselected.
     func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
         let cell = collectionView.cellForItemAtIndexPath(indexPath)
         cell?.alpha = 1.0
         //updateDeleteButtonTitle()
+    }
+// MARK: - Additional Methods
+    
+    // Sets map region and span using selected pin from MapViewController
+    func setLocation() {
+        let span: MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+        let annotation = MKPointAnnotation()
+        let location = CLLocationCoordinate2D(latitude: Double(selectedPin!.latitude), longitude: Double(selectedPin!.longitude))
+        let region = MKCoordinateRegion(center: location, span: span)
+        annotation.coordinate = location
+        
+        mapView.setRegion(region, animated: true)
+        mapView.addAnnotation(annotation)
     }
     
 // MARK: - Core Data Convenience

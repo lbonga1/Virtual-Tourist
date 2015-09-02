@@ -12,9 +12,6 @@ class FlickrClient: NSObject {
 
 // MARK: - Variables
     
-    // Core Data convenience
-    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
-    
     var session: NSURLSession
     
     typealias CompletionHander = (result: AnyObject!, error: NSError?) -> Void
@@ -26,12 +23,12 @@ class FlickrClient: NSObject {
     
 // MARK: - Methods
     
-    // Main Get method for flickr
+    // Method for retrieving photos from Flickr
     func taskForResource(parameters: [String : AnyObject], completionHandler: CompletionHander) -> NSURLSessionDataTask {
         
         var mutableParameters = parameters
         
-        // Add in the API Key and set paramaters
+        // Add in the API Key and set parameters
         mutableParameters["method"] = Methods.PhotoSearch
         mutableParameters["api_key"] = Keys.ApiKey
         mutableParameters["lat"] = parameters["lat"] as! String
@@ -44,13 +41,12 @@ class FlickrClient: NSObject {
         mutableParameters["nojsoncallback"] = Methods.NoJsonCallback
         mutableParameters["safe_search"] = Methods.SafeSearch
         
-        
+        // Build the URL and make the request
         let urlString = FlickrClient.BaseUrls.BaseUrl + FlickrClient.escapedParameters(mutableParameters)
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
         
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
-            
             if let error = downloadError {
                 completionHandler(result: nil, error: downloadError)
             } else {
@@ -182,6 +178,9 @@ class FlickrClient: NSObject {
         
         return Singleton.sharedInstance
     }
+    
+// MARK: - Core Data convenience
+    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
 
 
 }

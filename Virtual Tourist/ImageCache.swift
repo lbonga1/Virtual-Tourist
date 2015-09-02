@@ -30,7 +30,7 @@ class ImageCache {
             return image
         }
         
-        // Next Try the hard drive
+        // Next try the hard drive
         if let data = NSData(contentsOfFile: path) {
             return UIImage(data: data)
         }
