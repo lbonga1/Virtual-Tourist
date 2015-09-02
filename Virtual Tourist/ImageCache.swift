@@ -9,10 +9,11 @@
 import UIKit
 
 class ImageCache {
-   
+
+// MARK: - Variable
     private var inMemoryCache = NSCache()
     
-    // MARK: - Retreiving images
+// MARK: - Retreiving images
     
     func imageWithIdentifier(identifier: String?) -> UIImage? {
         
@@ -37,7 +38,7 @@ class ImageCache {
         return nil
     }
     
-    // MARK: - Saving images
+// MARK: - Saving images
     
     func storeImage(image: UIImage?, withIdentifier identifier: String) {
         let path = pathForIdentifier(identifier)
@@ -57,7 +58,7 @@ class ImageCache {
         data.writeToFile(path, atomically: true)
     }
     
-    // MARK: - Helper
+// MARK: - Helper
     
     func pathForIdentifier(identifier: String) -> String {
         let documentsDirectoryURL: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL

@@ -17,6 +17,7 @@ class Photo: NSManagedObject {
     // Promote from simple properties to Core Data attributes
     @NSManaged var pin: Pin?
     @NSManaged var imagePath: String
+    @NSManaged var imageURL: String
     
     // Core Data init method
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -30,9 +31,19 @@ class Photo: NSManagedObject {
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         // Init dictionary properties
         self.pin = pin
-        imagePath = dictionary["image_path"] as! String
+        var farm = dictionary["farm"] as! Int
+        var server = dictionary["server"] as! String
+        var id = dictionary["id"] as! String
+        var secret = dictionary["secret"] as! String
+        var url = "https://farm\(farm).staticflickr.com/\(server)/\(id)_\(secret).jpg"
+        self.imagePath = url.lastPathComponent
+        self.imageURL = url
+        
+//        imagePath = dictionary["image_path"] as! String
+//        imageURL = dictionary["image_url"] as! String
     }
     
+    // Cached image
     var locationImage: UIImage? {
         
         get {

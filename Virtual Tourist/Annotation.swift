@@ -15,9 +15,7 @@ class Annotation: NSObject, MKAnnotation {
     private var location: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0)
     
     var coordinate: CLLocationCoordinate2D {
-        get {
-            return location
-        }
+        return location
     }
     
     func setCoordinate(newCoordinate: CLLocationCoordinate2D) {

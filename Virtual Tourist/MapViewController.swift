@@ -44,13 +44,12 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         } else {
             println("Map info unavailable.")
         }
-    
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
     
-        self.fetchAllPins()
+        //self.fetchAllPins()
     }
 
 // MARK: - MKMapViewDelegate
@@ -105,15 +104,17 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             
             // Get PhotoViewController
             for pin in pins {
+//                if pin.latitude == lat {
+//                    self.pin = pin
+//
+//            performSegueWithIdentifier("ShowPhotos", sender: pin)
+                
                 if pin.hashValue == select.hashValue {
                     dispatch_async(dispatch_get_main_queue()) {
-                        let storyBoard = UIStoryboard(name: "Main", bundle: nil)
-                        let photoVC = self.storyboard!.instantiateViewControllerWithIdentifier("PhotoView") as! PhotoViewController
-                        self.navigationController?.pushViewController(photoVC, animated: true)
+                        self.performSegueWithIdentifier("ShowPhotos", sender: pin)
                     }
                 }
             }
-            
         }
     }
     
@@ -161,7 +162,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
                         self.sharedContext.save(&error)
                         
                         if let error = error {
-                            //self.alert("Error saving context")
+                            // TODO: Display UI Alert
                             println("error saving context: \(error.localizedDescription)")
                         }
                     }
@@ -186,22 +187,37 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     }
     
     // Fetch all persistent pins.
-    func fetchAllPins() -> [Pin] {
+    func fetchAllPins() {
         let error: NSErrorPointer = nil
         
         // Create the Fetch Request
         let fetchRequest = NSFetchRequest(entityName: "Pin")
         
         // Execute the Fetch Request
-        let results = sharedContext.executeFetchRequest(fetchRequest, error: error)
+        let results = sharedContext.executeFetchRequest(fetchRequest, error: error) as! [Pin]
         
         // Check for Errors
         if error != nil {
             println("Error in fectchAllActors(): \(error)")
         }
         
-        // Return the results, cast to an array of Pin objects
-        return results as! [Pin]
+        // Add pins to the map
+        
+        // FIX : - "NSArray element failed to match the Swift Array Element type
+        for pin in results {
+            let annotationToBeAdded = Annotation()
+            let pinLocation = CLLocationCoordinate2D(latitude: Double(pin.latitude), longitude: Double(pin.longitude))
+            annotationToBeAdded.setCoordinate(pinLocation)
+            mapView.addAnnotation(annotationToBeAdded)
+        }
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "ShowPhotos" {
+            let photoVC = segue.destinationViewController as!
+            PhotoViewController
+            photoVC.selectedPin = pin
+        }
     }
     
 // MARK: - Core Data Convenience
