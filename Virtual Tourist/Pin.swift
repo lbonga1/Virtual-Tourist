@@ -15,10 +15,10 @@ import CoreData
 
 class Pin: NSManagedObject {
     
-    // Hashvalue to get PhotoViewController with correct pin's coordinates.
-    override var hashValue: Int {
-        return "\(latitude.hashValue),\(longitude.hashValue)".hashValue
-    }
+//    // Hashvalue to get PhotoViewController with correct pin's coordinates.
+//    override var hashValue: Int {
+//        return "\(latitude.hashValue),\(longitude.hashValue)".hashValue
+//    }
     
     // Promote from simple properties to Core Data attributes
     @NSManaged var latitude: NSNumber
@@ -41,7 +41,7 @@ class Pin: NSManagedObject {
     }
 }
 
-// To conform to Equatable/Hashable protocol
-func == (lhs: Pin, rhs: Pin) -> Bool {
-    return lhs.hashValue == rhs.hashValue
-}
+//// To conform to Equatable/Hashable protocol
+//func == (lhs: Pin, rhs: Pin) -> Bool {
+//    return lhs.hashValue == rhs.hashValue
+//}

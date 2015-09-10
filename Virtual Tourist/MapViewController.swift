@@ -207,10 +207,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         if error != nil {
             println("Error in fectchAllActors(): \(error)")
         }
+        println(results)
         
         // Add pins to the map
-        
-        // FIXME: - "NSArray element failed to match the Swift Array Element type
         for pin in results {
             let annotationToBeAdded = Annotation()
             let pinLocation = CLLocationCoordinate2D(latitude: Double(pin.latitude), longitude: Double(pin.longitude))
