@@ -10,14 +10,13 @@ import UIKit
 import MapKit
 import CoreData
 
-class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognizerDelegate {
+class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognizerDelegate, NSFetchedResultsControllerDelegate {
 
 // MARK: - Outlets
     @IBOutlet weak var mapView: MKMapView!
     
 // MARK: - Variables
-    var pins = [Pin]()
-    var pin: Pin!
+    var selectedPin: Pin!
     var annotationToBeAdded: Annotation? = nil
     
     override func viewDidLoad() {
@@ -30,12 +29,16 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         
         // Retrieve persisted map region and span data
         self.getMapData()
+        
+        // Fetched Results Controller
+        fetchedResultsController.performFetch(nil)
+        fetchedResultsController.delegate = self
+        displayFetchedPins()
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
     
-        self.fetchAllPins()
     }
 
 // MARK: - MKMapViewDelegate
@@ -74,7 +77,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
         return nil
     }
-
     
     // Actions for selecting annotation
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
@@ -82,25 +84,12 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             mapView.deselectAnnotation(view.annotation, animated: true)
             println("pin tapped")
             
-            let selectedPin = view.annotation
-            let lat = selectedPin.coordinate.latitude
-            var pinLat = view.annotation.coordinate.latitude
-            var pinLon = view.annotation.coordinate.longitude
-            var selectedHashValue = "\(pinLat.hashValue),\(pinLon.hashValue)".hashValue
+            let pinLat = view.annotation.coordinate.latitude
+            let pinLon = view.annotation.coordinate.longitude
             
-            // Get PhotoViewController
-            for pin in pins {
-//                if pin.latitude == lat {
-//                    self.pin = pin
-//
-//            performSegueWithIdentifier("ShowPhotos", sender: pin)
-                
-                if pin.hashValue == selectedHashValue.hashValue {
-                    dispatch_async(dispatch_get_main_queue()) {
-                        self.performSegueWithIdentifier("ShowPhotos", sender: pin)
-                    }
-                }
-            }
+            selectedPin = searchForPinInCoreData(pinLat, longitude: pinLon)
+            
+            performSegueWithIdentifier("ShowPhotos", sender: selectedPin)
         }
     }
     
@@ -116,7 +105,8 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             annotationToBeAdded!.setCoordinate(newCoordinates)
             mapView.addAnnotation(annotationToBeAdded)
             
-            let pin = Pin(location: newCoordinates, context: self.sharedContext)
+            //let pin = Pin(location: newCoordinates, context: self.sharedContext)
+            let pin = pinFromAnnotation(annotationToBeAdded!)
             let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
             
             // Pre-fetch images from Flickr
@@ -162,10 +152,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         case .Ended:
             annotationToBeAdded!.setCoordinate(newCoordinates)
             
-//             // Add pin to set
-//            let selectedPin = Pin()
-//            pins.insert(selectedPin)
-            
             // Save to Core Data
             self.saveContext()
             
@@ -193,29 +179,34 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
     }
     
-    // Fetch all persistent pins.
-    func fetchAllPins() {
-        let error: NSErrorPointer = nil
-        
-        // Create the Fetch Request
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        
-        // Execute the Fetch Request
-        let results = sharedContext.executeFetchRequest(fetchRequest, error: error) as! [Pin]
-        
-        // Check for Errors
-        if error != nil {
-            println("Error in fectchAllActors(): \(error)")
+    func pinFromAnnotation(annotation: MKAnnotation) -> Pin {
+        let dictionary = [
+            Pin.Keys.Latitude: annotation.coordinate.latitude as NSNumber,
+            Pin.Keys.Longitude: annotation.coordinate.longitude as NSNumber,
+        ]
+        return Pin(dictionary: dictionary, context: sharedContext)
+    }
+    
+    func displayFetchedPins() {
+        if let pins = fetchedResultsController.fetchedObjects as? [Pin] {
+            for pin in pins {
+                let annotationToBeAdded = Annotation()
+                let pinLocation = CLLocationCoordinate2D(latitude: Double(pin.latitude), longitude: Double(pin.longitude))
+                annotationToBeAdded.setCoordinate(pinLocation)
+                mapView.addAnnotation(annotationToBeAdded)
+            }
         }
-        println(results)
+    }
+    
+    // Support for finding selected pin in Core Data
+    func searchForPinInCoreData(latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> Pin {
+        let pins = fetchedResultsController.fetchedObjects as! [Pin]
+        let lat = latitude as NSNumber
+        let lon = longitude as NSNumber
         
-        // Add pins to the map
-        for pin in results {
-            let annotationToBeAdded = Annotation()
-            let pinLocation = CLLocationCoordinate2D(latitude: Double(pin.latitude), longitude: Double(pin.longitude))
-            annotationToBeAdded.setCoordinate(pinLocation)
-            mapView.addAnnotation(annotationToBeAdded)
-        }
+        return pins.filter { pin in
+            pin.latitude == lat && pin.longitude == lon
+            }.first!
     }
     
     // Prepare for segue to Photo View Controller
@@ -223,14 +214,32 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         if segue.identifier == "ShowPhotos" {
             let photoVC = segue.destinationViewController as!
             PhotoViewController
-            photoVC.selectedPin = pin
+            photoVC.selectedPin = selectedPin
         }
     }
     
 // MARK: - Core Data Convenience
     
+    // Shared context
     lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
     
+    // Fetched results controller
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+        
+        }()
+    
+    // Saving support
     func saveContext() {
         CoreDataStackManager.sharedInstance().saveContext()
     }

@@ -15,10 +15,10 @@ import CoreData
 
 class Pin: NSManagedObject {
     
-//    // Hashvalue to get PhotoViewController with correct pin's coordinates.
-//    override var hashValue: Int {
-//        return "\(latitude.hashValue),\(longitude.hashValue)".hashValue
-//    }
+    struct Keys {
+        static let Latitude = "latitude"
+        static let Longitude = "longitude"
+    }
     
     // Promote from simple properties to Core Data attributes
     @NSManaged var latitude: NSNumber
@@ -29,19 +29,26 @@ class Pin: NSManagedObject {
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
-
-    init(location: CLLocationCoordinate2D, context: NSManagedObjectContext) {
+    
+    init(dictionary: [String: AnyObject], context: NSManagedObjectContext) {
         // Get the entity associated with "Pin" type.
         let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
         // Inherited init method
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         // Init dictionary properties
-        latitude = location.latitude as Double
-        longitude = location.longitude as Double
+        latitude = dictionary[Pin.Keys.Latitude] as! NSNumber
+        longitude = dictionary[Pin.Keys.Longitude] as! NSNumber
     }
-}
+    
+    
 
-//// To conform to Equatable/Hashable protocol
-//func == (lhs: Pin, rhs: Pin) -> Bool {
-//    return lhs.hashValue == rhs.hashValue
-//}
+//    init(location: CLLocationCoordinate2D, context: NSManagedObjectContext) {
+//        // Get the entity associated with "Pin" type.
+//        let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
+//        // Inherited init method
+//        super.init(entity: entity,insertIntoManagedObjectContext: context)
+//        // Init dictionary properties
+//        latitude = location.latitude as Double
+//        longitude = location.longitude as Double
+//    }
+}
