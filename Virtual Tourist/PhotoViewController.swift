@@ -8,21 +8,32 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class PhotoViewController: UIViewController {
+class PhotoViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, NSFetchedResultsControllerDelegate {
     
 // MARK: - Outlets
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var noPhotosLabel: UILabel!
     
 // MARK: - Variables
-    
-    var selectedPin: Pin?
-    var photos = [Photo]()
+    var selectedPin: Pin!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        noPhotosLabel.hidden = true
+        
+        // Collection view delegate and data source
+        collectionView.delegate = self
+        collectionView.dataSource = self
 
+        // Fetched Results Controller
+        fetchedResultsController.performFetch(nil)
+        fetchedResultsController.delegate = self
+
+        println(selectedPin.photos?.count)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -31,54 +42,28 @@ class PhotoViewController: UIViewController {
         
         self.collectionView.reloadData()
         
-        if photos.isEmpty {
-        // TODO: - Retrieve Flickr images with taskForResource method.
-        }
+//        if selectedPin.photos.isEmpty {
+//        // TODO: - Retrieve Flickr images with taskForResource method.
+//        }
     }
     
 // MARK: - Collection View Methods
     
     // Number of Collection View cells
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photos.count
+        let sectionItems = fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
+        return sectionItems.numberOfObjects
     }
     
     // Collection View cell information
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         // Assigns custom cell.
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! CollectionViewCell
-        let photo = photos[indexPath.item]
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
-        // Sets cell's image to cached photo if available
-        if photo.locationImage != nil {
-            cell.photoView.image = photo.locationImage
-        } else {
-            // Sets cell's image to placeholder while retrieving photo
-            cell.photoView.image = UIImage(named: "NoImage")
-            cell.activityView.hidden = false
-            cell.activityView.startAnimating()
-            dispatch_async(dispatch_get_main_queue()) {
-                // Get image
-                let imageURL = NSURL(string: photo.imageURL)
-                let imageData = NSData(contentsOfURL: imageURL!)
-                let image = UIImage(data: imageData!)
-                
-                // Sets cell's image to retrieved photo and stores in cache
-                cell.activityView.stopAnimating()
-                cell.activityView.hidden = true
-                cell.photoView.image = image
-                photo.locationImage = image
-                
-                // Save in Core Data
-                var error:NSError? = nil
-                self.sharedContext.save(&error)
-                
-                if let error = error {
-                    println("error saving context: \(error.localizedDescription)")
-                    // TODO: -Add UI alert message
-                }
-            }
-        }
+        // Displays placeholder or downloaded image
+        assignCellImage(cell, photo: photo)
+        
         return cell
     }
 
@@ -93,11 +78,12 @@ class PhotoViewController: UIViewController {
         cell?.alpha = 1.0
         //updateDeleteButtonTitle()
     }
+    
 // MARK: - Additional Methods
     
     // Sets map region and span using selected pin from MapViewController
     func setLocation() {
-        let span: MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+        let span: MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
         let annotation = MKPointAnnotation()
         let location = CLLocationCoordinate2D(latitude: Double(selectedPin!.latitude), longitude: Double(selectedPin!.longitude))
         let region = MKCoordinateRegion(center: location, span: span)
@@ -107,6 +93,19 @@ class PhotoViewController: UIViewController {
         mapView.addAnnotation(annotation)
     }
     
+    // Sets cell image to placeholder or downloaded image
+    func assignCellImage(cell: CollectionViewCell, photo: Photo) {
+        cell.activityView.startAnimating()
+        
+        if photo.locationImage == nil {
+            cell.photoView.image = UIImage(named: "NoImage")
+        } else {
+            cell.photoView.image = photo.locationImage
+            cell.activityView.stopAnimating()
+        }
+
+    }
+    
 // MARK: - Core Data Convenience
     
     lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
@@ -114,5 +113,22 @@ class PhotoViewController: UIViewController {
     func saveContext() {
         CoreDataStackManager.sharedInstance().saveContext()
     }
+    
+    // Fetched results controller
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: true)]
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.selectedPin)
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+    }()
+
 
 }

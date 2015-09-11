@@ -18,6 +18,7 @@ class Photo: NSManagedObject {
     @NSManaged var pin: Pin?
     @NSManaged var imagePath: String
     @NSManaged var imageURL: String
+    @NSManaged var dateAdded: NSDate
     
     // Core Data init method
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -38,6 +39,7 @@ class Photo: NSManagedObject {
         var url = "https://farm\(farm).staticflickr.com/\(server)/\(id)_\(secret).jpg"
         self.imagePath = url.lastPathComponent
         self.imageURL = url
+        dateAdded = NSDate()
         
 //        imagePath = dictionary["image_path"] as! String
 //        imageURL = dictionary["image_url"] as! String

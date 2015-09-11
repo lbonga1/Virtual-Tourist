@@ -105,7 +105,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             annotationToBeAdded!.setCoordinate(newCoordinates)
             mapView.addAnnotation(annotationToBeAdded)
             
-            //let pin = Pin(location: newCoordinates, context: self.sharedContext)
             let pin = pinFromAnnotation(annotationToBeAdded!)
             let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
             
@@ -147,10 +146,15 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             }
             
         case .Changed:
+            // Update pin coordinates
             annotationToBeAdded!.setCoordinate(newCoordinates)
             
         case .Ended:
+            // Update pin coordinates
             annotationToBeAdded!.setCoordinate(newCoordinates)
+            
+            // Add pin to fetched objects
+            fetchedResultsController.performFetch(nil)
             
             // Save to Core Data
             self.saveContext()
@@ -187,6 +191,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         return Pin(dictionary: dictionary, context: sharedContext)
     }
     
+    // Adds pins fetched from Core Data to map view.
     func displayFetchedPins() {
         if let pins = fetchedResultsController.fetchedObjects as? [Pin] {
             for pin in pins {
@@ -208,6 +213,49 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             pin.latitude == lat && pin.longitude == lon
             }.first!
     }
+    
+//    // Get photos from Flickr
+//    func getFlickrPhotos() {
+//        let pin = pinFromAnnotation(annotationToBeAdded!)
+//        let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
+//        
+//        // Pre-fetch images from Flickr
+//        FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
+//            
+//            // Handle the error case
+//            if let error = error {
+//                println("Error searching for photos: \(error.localizedDescription)")
+//                return
+//            }
+//            
+//            // Get a Swift dictionary from the JSON data
+//            if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
+//                //                    // Get total pages
+//                //                    if let maxPages = photosDictionary["pages"] as? NSNumber {
+//                //                        pin.pages = maxPages
+//                //                    }
+//                //                    // Get current page number
+//                //                    if let pageNumber = photosDictionary["page"] as? NSNumber {
+//                //                        pin.page = pageNumber
+//                //                    }
+//                if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
+//                    // Build Photo array
+//                    var photos = photoDictionary.map() {
+//                        Photo(pin: pin, dictionary: $0, context: self.sharedContext)
+//                    }
+//                    var error:NSError? = nil
+//                    
+//                    // Save to Core Data
+//                    self.sharedContext.save(&error)
+//                    
+//                    if let error = error {
+//                        // TODO: Display UI Alert
+//                        println("error saving context: \(error.localizedDescription)")
+//                    }
+//                }
+//            }
+//        }
+//    }
     
     // Prepare for segue to Photo View Controller
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
