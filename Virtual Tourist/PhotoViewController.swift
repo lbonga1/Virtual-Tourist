@@ -32,8 +32,6 @@ class PhotoViewController: UIViewController, UICollectionViewDataSource, UIColle
         // Fetched Results Controller
         fetchedResultsController.performFetch(nil)
         fetchedResultsController.delegate = self
-
-        println(selectedPin.photos?.count)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -102,6 +100,7 @@ class PhotoViewController: UIViewController, UICollectionViewDataSource, UIColle
         } else {
             cell.photoView.image = photo.locationImage
             cell.activityView.stopAnimating()
+            cell.activityView.hidden = true
         }
 
     }

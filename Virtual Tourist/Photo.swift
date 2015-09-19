@@ -14,9 +14,14 @@ import CoreData
 
 class Photo: NSManagedObject {
     
+    struct Keys {
+        static let ImageID = "imageID"
+        static let ImageURL = "imageURL"
+    }
+    
     // Promote from simple properties to Core Data attributes
-    @NSManaged var pin: Pin?
-    @NSManaged var imagePath: String
+    @NSManaged var pin: Pin
+    @NSManaged var imageID: String
     @NSManaged var imageURL: String
     @NSManaged var dateAdded: NSDate
     
@@ -32,33 +37,25 @@ class Photo: NSManagedObject {
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         // Init dictionary properties
         self.pin = pin
-        var farm = dictionary["farm"] as! Int
-        var server = dictionary["server"] as! String
-        var id = dictionary["id"] as! String
-        var secret = dictionary["secret"] as! String
-        var url = "https://farm\(farm).staticflickr.com/\(server)/\(id)_\(secret).jpg"
-        self.imagePath = url.lastPathComponent
-        self.imageURL = url
+        imageID = dictionary[Photo.Keys.ImageID] as! String
+        imageURL = dictionary[Photo.Keys.ImageURL] as! String
         dateAdded = NSDate()
-        
-//        imagePath = dictionary["image_path"] as! String
-//        imageURL = dictionary["image_url"] as! String
     }
     
     // Cached image
     var locationImage: UIImage? {
         get {
-            return FlickrClient.Caches.imageCache.imageWithIdentifier(imagePath)
+            return FlickrClient.Caches.imageCache.imageWithIdentifier(imageID)
         }
         set {
-            FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: imagePath)
+            FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: imageID)
         }
     }
     
     //Delete the associated image file when the Photo managed object is deleted.
     override func prepareForDeletion() {
         let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
-        let pathArray = [dirPath, imagePath]
+        let pathArray = [dirPath, imageID]
         let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
         NSFileManager.defaultManager().removeItemAtURL(fileURL, error: nil)
     }

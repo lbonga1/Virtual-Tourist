@@ -82,7 +82,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
         if let annotation = view.annotation as? Annotation {
             mapView.deselectAnnotation(view.annotation, animated: true)
-            println("pin tapped")
             
             let pinLat = view.annotation.coordinate.latitude
             let pinLon = view.annotation.coordinate.longitude
@@ -106,44 +105,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             mapView.addAnnotation(annotationToBeAdded)
             
             let pin = pinFromAnnotation(annotationToBeAdded!)
-            let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
-            
-            // Pre-fetch images from Flickr
-            FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
-                
-                // Handle the error case
-                if let error = error {
-                    println("Error searching for photos: \(error.localizedDescription)")
-                    return
-                }
-                
-                // Get a Swift dictionary from the JSON data
-                if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
-//                    // Get total pages
-//                    if let maxPages = photosDictionary["pages"] as? NSNumber {
-//                        pin.pages = maxPages
-//                    }
-//                    // Get current page number
-//                    if let pageNumber = photosDictionary["page"] as? NSNumber {
-//                        pin.page = pageNumber
-//                    }
-                    if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
-                        // Build Photo array
-                        var photos = photoDictionary.map() {
-                            Photo(pin: pin, dictionary: $0, context: self.sharedContext)
-                        }
-                        var error:NSError? = nil
-                        
-                        // Save to Core Data
-                        self.sharedContext.save(&error)
-                        
-                        if let error = error {
-                            // TODO: Display UI Alert
-                            println("error saving context: \(error.localizedDescription)")
-                        }
-                    }
-                }
-            }
+            getImagesFromCoordinates(pin)
             
         case .Changed:
             // Update pin coordinates
@@ -214,48 +176,59 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             }.first!
     }
     
-//    // Get photos from Flickr
-//    func getFlickrPhotos() {
-//        let pin = pinFromAnnotation(annotationToBeAdded!)
-//        let parameters :[String:AnyObject] = ["lat":"\(pin.latitude)", "lon":"\(pin.longitude)"]
-//        
-//        // Pre-fetch images from Flickr
-//        FlickrClient.sharedInstance().taskForResource(parameters) { [unowned self] jsonResult, error in
-//            
-//            // Handle the error case
-//            if let error = error {
-//                println("Error searching for photos: \(error.localizedDescription)")
-//                return
-//            }
-//            
-//            // Get a Swift dictionary from the JSON data
-//            if let photosDictionary = jsonResult.valueForKey("photos") as? [String : AnyObject] {
-//                //                    // Get total pages
-//                //                    if let maxPages = photosDictionary["pages"] as? NSNumber {
-//                //                        pin.pages = maxPages
-//                //                    }
-//                //                    // Get current page number
-//                //                    if let pageNumber = photosDictionary["page"] as? NSNumber {
-//                //                        pin.page = pageNumber
-//                //                    }
-//                if let photoDictionary = photosDictionary["photo"] as? [[String : AnyObject]] {
-//                    // Build Photo array
-//                    var photos = photoDictionary.map() {
-//                        Photo(pin: pin, dictionary: $0, context: self.sharedContext)
-//                    }
-//                    var error:NSError? = nil
-//                    
-//                    // Save to Core Data
-//                    self.sharedContext.save(&error)
-//                    
-//                    if let error = error {
-//                        // TODO: Display UI Alert
-//                        println("error saving context: \(error.localizedDescription)")
-//                    }
-//                }
-//            }
-//        }
-//    }
+    func getImagesFromCoordinates(pin: Pin) {
+        FlickrClient.sharedInstance().getFlickrPhotos(pin.latitude as Double, longitude: pin.longitude as Double) { photosArray, error in
+            if let error = error {
+                println("error code: \(error.code)")
+                println("error description: \(error.localizedDescription)")
+            } else {
+                if let photosArray = photosArray as? [[String : AnyObject]] {
+                    if photosArray.count == 0 {
+                        dispatch_async(dispatch_get_main_queue()) {
+                            CoreDataStackManager.sharedInstance().saveContext()
+                        }
+                        return
+                    }
+                    photosArray.map { (photoDictionary: [String : AnyObject]) -> Photo in
+                        var dictionary = [String : String]()
+                        
+                        if let imageURL = photoDictionary[FlickrClient.JsonResponseKeys.ImagePath] as? String {
+                            if let imageID = photoDictionary[FlickrClient.JsonResponseKeys.ImageID] as? String {
+                                dictionary[Photo.Keys.ImageID] = imageID
+                                dictionary[Photo.Keys.ImageURL] = imageURL
+                            }
+                        }
+                        // Init the Photo object
+                        let photo = Photo(pin: pin, dictionary: dictionary, context: self.sharedContext)
+                        
+                        dispatch_async(dispatch_get_main_queue()) {
+                            photo.pin = pin
+                        }
+                        
+                        // Get that image on a background thread
+                        let session = FlickrClient.sharedInstance().session
+                        let url = NSURL(string: photo.imageURL)!
+                        
+                        let task = session.dataTaskWithURL(url) { data, response, error in
+                            if let error = error {
+                                // handle error
+                            }
+                            else {
+                                let image = UIImage(data: data)
+                                
+                                dispatch_async(dispatch_get_main_queue()) {
+                                    photo.locationImage = image
+                                }
+                            }
+                        }
+                        task.resume()
+                        
+                        return photo
+                    }
+                }
+            }
+        }
+    }
     
     // Prepare for segue to Photo View Controller
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -284,8 +257,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             cacheName: nil)
         
         return fetchedResultsController
-        
-        }()
+    }()
     
     // Saving support
     func saveContext() {
