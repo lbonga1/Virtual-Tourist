@@ -55,19 +55,6 @@ class FlickrClient: NSObject {
         return "\(bottom_left_lon),\(bottom_left_lat),\(top_right_lon),\(top_right_lat)"
     }
     
-    // Parsing the JSON
-    class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {
-        var parsingError: NSError? = nil
-        
-        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
-        
-        if let error = parsingError {
-            completionHandler(result: nil, error: error)
-        } else {
-            completionHandler(result: parsedResult, error: nil)
-        }
-    }
-    
     // For error debugging
     func errorForData(data: NSData?, response: NSURLResponse?, error: NSError) -> NSError {
         if let parsedResult = NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments, error: nil) as? [String : AnyObject] {
@@ -79,6 +66,19 @@ class FlickrClient: NSObject {
             }
         }
         return error
+    }
+    
+    // Parsing the JSON
+    class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {
+        var parsingError: NSError? = nil
+        
+        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
+        
+        if let error = parsingError {
+            completionHandler(result: nil, error: error)
+        } else {
+            completionHandler(result: parsedResult, error: nil)
+        }
     }
     
     // Helper function: Given a dictionary of parameters, convert to a string for a url

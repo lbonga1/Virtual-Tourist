@@ -14,8 +14,4 @@ class CollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var photoView: UIImageView!
     @IBOutlet weak var activityView: UIActivityIndicatorView!
     
-    required init(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-    
 }

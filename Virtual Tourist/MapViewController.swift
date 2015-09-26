@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognizerDelegate, NSFetchedResultsControllerDelegate {
+class MapViewController: UIViewController {
 
 // MARK: - Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -23,9 +23,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         super.viewDidLoad()
         
         // Long press gesture
-        var gesture: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
-        gesture.minimumPressDuration = 1.0
-        self.mapView.addGestureRecognizer(gesture)
+        self.defineLongPressGesture()
         
         // Retrieve persisted map region and span data
         self.getMapData()
@@ -36,12 +34,29 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         displayFetchedPins()
     }
     
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
+// MARK: - Core Data Convenience
     
-    }
+    // Shared context
+    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
+    
+    // Fetched results controller
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+        }()
+}
 
-// MARK: - MKMapViewDelegate
+// MARK: - Map View Delegate
+extension MapViewController: MKMapViewDelegate {
     
     // Saves map's region when changed.
     func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
@@ -92,14 +107,35 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             performSegueWithIdentifier("ShowPhotos", sender: selectedPin)
         }
     }
+}
+
+// MARK: - Gesture Recognizer Delegate
+extension MapViewController: UIGestureRecognizerDelegate {
     
+    // Adds pin annotation to map when long press gesture is used
+    func defineLongPressGesture() {
+        var gesture: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
+        gesture.minimumPressDuration = 1.0
+        self.mapView.addGestureRecognizer(gesture)
+    }
+}
+
+// MARK: - Fetched Results Controller Delegate
+extension MapViewController: NSFetchedResultsControllerDelegate {
+    
+    func controllerDidChangeContent(controller: NSFetchedResultsController) {   }
+}
+
 // MARK: - Additional Methods
+extension MapViewController {
     
+    // Add pin annotation to map using long press gesture
     func addAnnotation(longPress: UIGestureRecognizer) {
         var touchPoint = longPress.locationInView(mapView)
         var newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
         
         switch longPress.state {
+        // Long press gesture begins
         case .Began:
             annotationToBeAdded = Annotation()
             annotationToBeAdded!.setCoordinate(newCoordinates)
@@ -108,11 +144,13 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             // Fetch images from Flickr when pin is dropped
             let pin = pinFromAnnotation(annotationToBeAdded!)
             getImagesFromCoordinates(pin)
-            
+        
+        // Pin is being dragged
         case .Changed:
             // Update pin coordinates
             annotationToBeAdded!.setCoordinate(newCoordinates)
-            
+        
+        // Long press gesture is released
         case .Ended:
             // Update pin coordinates
             annotationToBeAdded!.setCoordinate(newCoordinates)
@@ -122,7 +160,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             
             // Save to Core Data
             dispatch_async(dispatch_get_main_queue()) {
-                self.saveContext()
+                CoreDataStackManager.sharedInstance().saveContext()
             }
             
         default:
@@ -151,8 +189,8 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     
     // Creates a Pin object
     func pinFromAnnotation(annotation: MKAnnotation) -> Pin {
-        let pageLimit = 5
-        let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
+        let pageLimit = 20
+        let randomPage = Float(arc4random_uniform(UInt32(pageLimit))) + 1
         
         let dictionary = [
             Pin.Keys.Latitude: annotation.coordinate.latitude as NSNumber,
@@ -248,31 +286,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             PhotoViewController
             photoVC.selectedPin = selectedPin
         }
-    }
-    
-// MARK: - Core Data Convenience
-    
-    // Shared context
-    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
-    
-    // Fetched results controller
-    lazy var fetchedResultsController: NSFetchedResultsController = {
-        
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
-        
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-            managedObjectContext: self.sharedContext,
-            sectionNameKeyPath: nil,
-            cacheName: nil)
-        
-        return fetchedResultsController
-    }()
-    
-    // Saving support
-    func saveContext() {
-        CoreDataStackManager.sharedInstance().saveContext()
     }
 
 }

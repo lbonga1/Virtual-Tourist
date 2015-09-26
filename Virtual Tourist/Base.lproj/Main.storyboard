@@ -190,7 +190,11 @@
                                 </constraints>
                                 <items>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="vv6-m0-VK4"/>
-                                    <barButtonItem title="New Collection" id="aaQ-bU-3MY"/>
+                                    <barButtonItem title="New Collection" id="aaQ-bU-3MY">
+                                        <connections>
+                                            <action selector="getNewCollection:" destination="WFR-DM-5As" id="HuV-eG-t7C"/>
+                                        </connections>
+                                    </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="aHU-ih-HaY"/>
                                 </items>
                             </toolbar>
