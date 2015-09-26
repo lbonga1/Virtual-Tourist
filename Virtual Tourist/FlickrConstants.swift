@@ -27,6 +27,7 @@ extension FlickrClient {
         static let DataFormat = "format"
         static let NsJsonCallBack = "nojsoncallback"
         static let PhotoLimit = "per_page"
+        static let Page = "page"
     }
     
     struct MethodValues {
@@ -36,6 +37,7 @@ extension FlickrClient {
         static let DataFormat = "json"
         static let NoJsonCallback = "1"
         static let PhotoLimit = "21"
+        static let Page = "1"
     }
     
     struct JsonResponseKeys {

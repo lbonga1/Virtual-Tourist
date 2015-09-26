@@ -18,12 +18,14 @@ class Pin: NSManagedObject {
     struct Keys {
         static let Latitude = "latitude"
         static let Longitude = "longitude"
+        static let Page = "page"
     }
     
     // Promote from simple properties to Core Data attributes
     @NSManaged var latitude: NSNumber
     @NSManaged var longitude: NSNumber
-    @NSManaged var photos: NSMutableOrderedSet?
+    @NSManaged var page: Float
+    @NSManaged var photos: NSSet
     
     // Core Data init method
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -38,17 +40,6 @@ class Pin: NSManagedObject {
         // Init dictionary properties
         latitude = dictionary[Pin.Keys.Latitude] as! NSNumber
         longitude = dictionary[Pin.Keys.Longitude] as! NSNumber
+        page = dictionary[Pin.Keys.Page] as! Float
     }
-    
-    
-
-//    init(location: CLLocationCoordinate2D, context: NSManagedObjectContext) {
-//        // Get the entity associated with "Pin" type.
-//        let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
-//        // Inherited init method
-//        super.init(entity: entity,insertIntoManagedObjectContext: context)
-//        // Init dictionary properties
-//        latitude = location.latitude as Double
-//        longitude = location.longitude as Double
-//    }
 }

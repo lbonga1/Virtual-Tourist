@@ -40,6 +40,10 @@ class PhotoViewController: UIViewController, UICollectionViewDataSource, UIColle
         
         self.collectionView.reloadData()
         
+        if fetchedResultsController.fetchedObjects?.count == 0 {
+            noPhotosLabel.hidden = false
+        }
+        
 //        if selectedPin.photos.isEmpty {
 //        // TODO: - Retrieve Flickr images with taskForResource method.
 //        }
@@ -64,17 +68,21 @@ class PhotoViewController: UIViewController, UICollectionViewDataSource, UIColle
         
         return cell
     }
-
-    // Allows for editing Collection View cells.
-    func collectionView(collectionView: UICollectionView, canEditItemAtIndexPath indexPath: NSIndexPath) -> Bool {
-        return true
-    }
         
-    // Changes cell opacity and updates delete button title when deselected.
-    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)
-        cell?.alpha = 1.0
-        //updateDeleteButtonTitle()
+    // Deletes photo when selected
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        // Define selected photo
+        let selectedPhoto = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        
+        // Remove photo from Documents Directory
+        selectedPhoto.locationImage = nil
+        
+        // Delete from Core Data and save
+        sharedContext.deleteObject(selectedPhoto)
+        CoreDataStackManager.sharedInstance().saveContext()
+        
+        // Reload collection view data
+        collectionView.reloadData()
     }
     
 // MARK: - Additional Methods

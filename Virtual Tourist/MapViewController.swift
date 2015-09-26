@@ -88,6 +88,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             
             selectedPin = searchForPinInCoreData(pinLat, longitude: pinLon)
             
+            // Segue to PhotoViewController
             performSegueWithIdentifier("ShowPhotos", sender: selectedPin)
         }
     }
@@ -104,6 +105,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             annotationToBeAdded!.setCoordinate(newCoordinates)
             mapView.addAnnotation(annotationToBeAdded)
             
+            // Fetch images from Flickr when pin is dropped
             let pin = pinFromAnnotation(annotationToBeAdded!)
             getImagesFromCoordinates(pin)
             
@@ -119,7 +121,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             fetchedResultsController.performFetch(nil)
             
             // Save to Core Data
-            self.saveContext()
+            dispatch_async(dispatch_get_main_queue()) {
+                self.saveContext()
+            }
             
         default:
             return
@@ -145,10 +149,15 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
     }
     
+    // Creates a Pin object
     func pinFromAnnotation(annotation: MKAnnotation) -> Pin {
+        let pageLimit = 5
+        let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
+        
         let dictionary = [
             Pin.Keys.Latitude: annotation.coordinate.latitude as NSNumber,
             Pin.Keys.Longitude: annotation.coordinate.longitude as NSNumber,
+            Pin.Keys.Page: randomPage
         ]
         return Pin(dictionary: dictionary, context: sharedContext)
     }
@@ -176,8 +185,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             }.first!
     }
     
+    // Fetch images from Flickr using pin coordinates
     func getImagesFromCoordinates(pin: Pin) {
-        FlickrClient.sharedInstance().getFlickrPhotos(pin.latitude as Double, longitude: pin.longitude as Double) { photosArray, error in
+        FlickrClient.sharedInstance().getFlickrPhotos(pin.latitude as Double, longitude: pin.longitude as Double, page: pin.page) { photosArray, error in
             if let error = error {
                 println("error code: \(error.code)")
                 println("error description: \(error.localizedDescription)")
@@ -218,6 +228,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
                                 
                                 dispatch_async(dispatch_get_main_queue()) {
                                     photo.locationImage = image
+                                    CoreDataStackManager.sharedInstance().saveContext()
                                 }
                             }
                         }
