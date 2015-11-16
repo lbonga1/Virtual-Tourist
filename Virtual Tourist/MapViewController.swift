@@ -28,8 +28,11 @@ class MapViewController: UIViewController {
         // Retrieve persisted map region and span data
         self.getMapData()
         
-        // Fetched Results Controller
-        fetchedResultsController.performFetch(nil)
+        do {
+            // Fetched Results Controller
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
         fetchedResultsController.delegate = self
         displayFetchedPins()
     }
@@ -37,7 +40,7 @@ class MapViewController: UIViewController {
 // MARK: - Core Data Convenience
     
     // Shared context
-    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
+    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext}()
     
     // Fetched results controller
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -59,7 +62,7 @@ class MapViewController: UIViewController {
 extension MapViewController: MKMapViewDelegate {
     
     // Saves map's region when changed.
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         let mapRegionCenterLatitude: CLLocationDegrees = mapView.region.center.latitude
         let mapRegionCenterLongitude: CLLocationDegrees = mapView.region.center.longitude
         let mapRegionSpanLatitudeDelta: CLLocationDegrees = mapView.region.span.latitudeDelta
@@ -75,7 +78,7 @@ extension MapViewController: MKMapViewDelegate {
     }
     
     // Create annotation.
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is Annotation {
         
             var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier("pin") as? MKPinAnnotationView
@@ -94,12 +97,12 @@ extension MapViewController: MKMapViewDelegate {
     }
     
     // Actions for selecting annotation
-    func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         if let annotation = view.annotation as? Annotation {
-            mapView.deselectAnnotation(view.annotation, animated: true)
+            mapView.deselectAnnotation(annotation, animated: true)
             
-            let pinLat = view.annotation.coordinate.latitude
-            let pinLon = view.annotation.coordinate.longitude
+            let pinLat = view.annotation!.coordinate.latitude
+            let pinLon = view.annotation!.coordinate.longitude
             
             selectedPin = searchForPinInCoreData(pinLat, longitude: pinLon)
             
@@ -114,7 +117,7 @@ extension MapViewController: UIGestureRecognizerDelegate {
     
     // Adds pin annotation to map when long press gesture is used
     func defineLongPressGesture() {
-        var gesture: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
+        let gesture: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
         gesture.minimumPressDuration = 1.0
         self.mapView.addGestureRecognizer(gesture)
     }
@@ -131,15 +134,15 @@ extension MapViewController {
     
     // Add pin annotation to map using long press gesture
     func addAnnotation(longPress: UIGestureRecognizer) {
-        var touchPoint = longPress.locationInView(mapView)
-        var newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
+        let touchPoint = longPress.locationInView(mapView)
+        let newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
         
         switch longPress.state {
         // Long press gesture begins
         case .Began:
             annotationToBeAdded = Annotation()
             annotationToBeAdded!.setCoordinate(newCoordinates)
-            mapView.addAnnotation(annotationToBeAdded)
+            mapView.addAnnotation(annotationToBeAdded!)
             
             // Fetch images from Flickr when pin is dropped
             let pin = pinFromAnnotation(annotationToBeAdded!)
@@ -155,8 +158,11 @@ extension MapViewController {
             // Update pin coordinates
             annotationToBeAdded!.setCoordinate(newCoordinates)
             
-            // Add pin to fetched objects
-            fetchedResultsController.performFetch(nil)
+            do {
+                // Add pin to fetched objects
+                try fetchedResultsController.performFetch()
+            } catch _ {
+            }
             
             // Save to Core Data
             dispatch_async(dispatch_get_main_queue()) {
@@ -171,7 +177,7 @@ extension MapViewController {
     // Retrieve persisted map region and span
     func getMapData() {
         if let mapInfo: [String : CLLocationDegrees] = NSUserDefaults.standardUserDefaults().dictionaryForKey("mapInfo") as? [String : CLLocationDegrees] {
-            var mapRegion = MKCoordinateRegion(
+            let mapRegion = MKCoordinateRegion(
                 center: CLLocationCoordinate2D(
                     latitude: mapInfo["centerLatitude"]!,
                     longitude: mapInfo["centerLongitude"]!
@@ -183,7 +189,7 @@ extension MapViewController {
             )
             mapView.region = mapRegion
         } else {
-            println("Map info unavailable.")
+            print("Map info unavailable.")
         }
     }
     
@@ -227,8 +233,8 @@ extension MapViewController {
     func getImagesFromCoordinates(pin: Pin) {
         FlickrClient.sharedInstance().getFlickrPhotos(pin.latitude as Double, longitude: pin.longitude as Double, page: pin.page) { photosArray, error in
             if let error = error {
-                println("error code: \(error.code)")
-                println("error description: \(error.localizedDescription)")
+                print("error code: \(error.code)")
+                print("error description: \(error.localizedDescription)")
             } else {
                 if let photosArray = photosArray as? [[String : AnyObject]] {
                     if photosArray.count == 0 {
@@ -262,7 +268,7 @@ extension MapViewController {
                                 // handle error
                             }
                             else {
-                                let image = UIImage(data: data)
+                                let image = UIImage(data: data!)
                                 
                                 dispatch_async(dispatch_get_main_queue()) {
                                     photo.locationImage = image

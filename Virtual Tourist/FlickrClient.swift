@@ -35,7 +35,7 @@ class FlickrClient: NSObject {
                 let newError = self.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: newError)
             } else {
-                FlickrClient.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
+                FlickrClient.parseJSONWithCompletionHandler(data!, completionHandler: completionHandler)
             }
         }
         // Start the request
@@ -57,7 +57,7 @@ class FlickrClient: NSObject {
     
     // For error debugging
     func errorForData(data: NSData?, response: NSURLResponse?, error: NSError) -> NSError {
-        if let parsedResult = NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments, error: nil) as? [String : AnyObject] {
+        if let parsedResult = (try? NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as? [String : AnyObject] {
             
             if let errorMessage = parsedResult[JsonResponseKeys.StatusMessage] as? String {
                 let userInfo = [NSLocalizedDescriptionKey : errorMessage]
@@ -72,7 +72,13 @@ class FlickrClient: NSObject {
     class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {
         var parsingError: NSError? = nil
         
-        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
+        let parsedResult: AnyObject?
+        do {
+            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+        } catch let error as NSError {
+            parsingError = error
+            parsedResult = nil
+        }
         
         if let error = parsingError {
             completionHandler(result: nil, error: error)
@@ -95,7 +101,7 @@ class FlickrClient: NSObject {
             // Append it
             urlVars += [key + "=" + "\(escapedValue!)"]
         }
-        return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
     }
 
 // MARK: - Shared Instance

@@ -29,8 +29,11 @@ class PhotoViewController: UIViewController {
         collectionView.delegate = self
         collectionView.dataSource = self
 
-        // Fetched Results Controller
-        fetchedResultsController.performFetch(nil)
+        do {
+            // Fetched Results Controller
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
         fetchedResultsController.delegate = self
     }
     
@@ -62,7 +65,7 @@ class PhotoViewController: UIViewController {
     }
     
 // MARK: - Core Data Convenience
-    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext!}()
+    lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext}()
     
     // Fetched results controller
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -86,7 +89,7 @@ extension PhotoViewController: UICollectionViewDataSource {
     
     // Number of Collection View cells
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionItems = fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
+        let sectionItems = fetchedResultsController.sections![section] 
         return sectionItems.numberOfObjects
     }
     
@@ -161,8 +164,8 @@ extension PhotoViewController {
     func newFlickrCollection(pin: Pin) {
         FlickrClient.sharedInstance().getFlickrPhotos(selectedPin.latitude as Double, longitude: selectedPin.longitude as Double, page: selectedPin.page) { photosArray, error in
             if let error = error {
-                println("error code: \(error.code)")
-                println("error description: \(error.localizedDescription)")
+                print("error code: \(error.code)")
+                print("error description: \(error.localizedDescription)")
             } else {
                 if let photosArray = photosArray as? [[String : AnyObject]] {
                     if photosArray.count == 0 {
@@ -196,7 +199,7 @@ extension PhotoViewController {
                                 // handle error
                             }
                             else {
-                                let image = UIImage(data: data)
+                                let image = UIImage(data: data!)
                                 
                                 dispatch_async(dispatch_get_main_queue()) {
                                     photo.locationImage = image
