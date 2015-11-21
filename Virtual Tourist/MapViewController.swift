@@ -265,7 +265,8 @@ extension MapViewController {
                         
                         let task = session.dataTaskWithURL(url) { data, response, error in
                             if let error = error {
-                                // handle error
+                                print("error code: \(error.code)")
+                                print("error description: \(error.localizedDescription)")
                             }
                             else {
                                 let image = UIImage(data: data!)

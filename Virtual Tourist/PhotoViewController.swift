@@ -111,18 +111,10 @@ extension PhotoViewController: UICollectionViewDelegate {
         
     // Deletes photo when selected
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        // Define selected photo
-        let selectedPhoto = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
-        
-        // Remove photo from Documents Directory
-        selectedPhoto.locationImage = nil
-        
-        // Delete from Core Data and save
-        sharedContext.deleteObject(selectedPhoto)
-        CoreDataStackManager.sharedInstance().saveContext()
-        
-        // Reload collection view data
-        collectionView.reloadData()
+        // Deselct item to make it re-selectable
+        collectionView.deselectItemAtIndexPath(indexPath, animated: true)
+        // Display delete confirmation alert
+        self.displayAlert(indexPath)
     }
 }
     
@@ -196,14 +188,16 @@ extension PhotoViewController {
                         
                         let task = session.dataTaskWithURL(url) { data, response, error in
                             if let error = error {
-                                // handle error
-                            }
+                                print("error code: \(error.code)")
+                                print("error description: \(error.localizedDescription)")                            }
                             else {
                                 let image = UIImage(data: data!)
                                 
                                 dispatch_async(dispatch_get_main_queue()) {
                                     photo.locationImage = image
                                     CoreDataStackManager.sharedInstance().saveContext()
+                                    
+                                    self.collectionView.reloadData()
                                 }
                             }
                         }
@@ -225,7 +219,33 @@ extension PhotoViewController {
             self.sharedContext.deleteObject(photo)
             CoreDataStackManager.sharedInstance().saveContext()
         }
-        // Refresh collection view data
+    }
+    
+    // Support for deleting a single photo
+    func deleteSinglePhoto(indexPath: NSIndexPath) {
+        // Define selected photo
+        let selectedPhoto = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        
+        // Remove photo from Documents Directory
+        selectedPhoto.locationImage = nil
+        
+        // Delete from Core Data and save
+        sharedContext.deleteObject(selectedPhoto)
+        CoreDataStackManager.sharedInstance().saveContext()
+        
+        // Reload collection view data
         collectionView.reloadData()
+    }
+    
+    // Displays confirmation alert for deleting a photo.
+    func displayAlert(indexPath: NSIndexPath) {
+        let alertController = UIAlertController(title: "Confirm", message: "Are you sure you want to permanently delete this photo?", preferredStyle: .Alert)
+        let okAction = UIAlertAction (title: "OK", style: UIAlertActionStyle.Default, handler: { (alertController) -> Void in
+            self.deleteSinglePhoto(indexPath)
+        })
+        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel, handler: nil)
+        alertController.addAction(okAction)
+        alertController.addAction(cancelAction)
+        self.presentViewController(alertController, animated: true, completion: nil)
     }
 }

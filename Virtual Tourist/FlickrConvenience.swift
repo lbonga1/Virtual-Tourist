@@ -27,6 +27,8 @@ extension FlickrClient {
         // Make the request
         taskForGetMethod(parameters) { JsonResult, error in
             if let error = error {
+                print("error code: \(error.code)")
+                print("error description: \(error.localizedDescription)")
                 completionHandler(result: nil, error: NSError(domain: "getFlickrPhotos", code: 1, userInfo: [NSLocalizedDescriptionKey: "Network Error"]))
             } else {
                 if let successMessage = JsonResult.valueForKey(JsonResponseKeys.SuccessMessage) as? String {
