@@ -12,15 +12,15 @@ import Foundation
 
 class Annotation: NSObject, MKAnnotation {
     
-    private var location: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+    fileprivate var location: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0)
     
     var coordinate: CLLocationCoordinate2D {
         return location
     }
     
-    func setCoordinate(newCoordinate: CLLocationCoordinate2D) {
-        willChangeValueForKey("coordinate")
+    func setCoordinate(_ newCoordinate: CLLocationCoordinate2D) {
+        willChangeValue(forKey: "coordinate")
         self.location = newCoordinate
-        didChangeValueForKey("coordinate")
+        didChangeValue(forKey: "coordinate")
     }
 }

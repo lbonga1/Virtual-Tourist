@@ -23,7 +23,7 @@ class PhotoViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        noPhotosLabel.hidden = true
+        noPhotosLabel.isHidden = true
         
         // Collection view delegate and data source
         collectionView.delegate = self
@@ -37,21 +37,21 @@ class PhotoViewController: UIViewController {
         fetchedResultsController.delegate = self
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         // Sets map region and span
         self.setLocation()
         
         self.collectionView.reloadData()
         
         if fetchedResultsController.fetchedObjects?.count == 0 {
-            noPhotosLabel.hidden = false
+            noPhotosLabel.isHidden = false
         }
     }
     
 // MARK: - Actions
     
     // Action to download a new set of photos from Flickr
-    @IBAction func getNewCollection(sender: AnyObject) {
+    @IBAction func getNewCollection(_ sender: AnyObject) {
         // Deletes currently downloaded collection of photos
         self.deleteCurrentCollection()
         
@@ -68,9 +68,9 @@ class PhotoViewController: UIViewController {
     lazy var sharedContext = {CoreDataStackManager.sharedInstance().managedObjectContext}()
     
     // Fetched results controller
-    lazy var fetchedResultsController: NSFetchedResultsController = {
+    lazy var fetchedResultsController: NSFetchedResultsController<Photo> = {
         
-        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        let fetchRequest = NSFetchRequest<Photo>(entityName: "Photo")
         
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: true)]
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.selectedPin)
@@ -88,16 +88,16 @@ class PhotoViewController: UIViewController {
 extension PhotoViewController: UICollectionViewDataSource {
     
     // Number of Collection View cells
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let sectionItems = fetchedResultsController.sections![section] 
         return sectionItems.numberOfObjects
     }
     
     // Collection View cell information
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         // Assigns custom cell.
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! CollectionViewCell
-        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! CollectionViewCell
+        let photo = fetchedResultsController.object(at: indexPath) 
         
         // Displays placeholder or downloaded image
         assignCellImage(cell, photo: photo)
@@ -110,9 +110,9 @@ extension PhotoViewController: UICollectionViewDataSource {
 extension PhotoViewController: UICollectionViewDelegate {
         
     // Deletes photo when selected
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // Deselct item to make it re-selectable
-        collectionView.deselectItemAtIndexPath(indexPath, animated: true)
+        collectionView.deselectItem(at: indexPath, animated: true)
         // Display delete confirmation alert
         self.displayAlert(indexPath)
     }
@@ -121,7 +121,7 @@ extension PhotoViewController: UICollectionViewDelegate {
 // MARK: - Fetched Results Controller Delegate
 extension PhotoViewController: NSFetchedResultsControllerDelegate {
         
-    func controllerDidChangeContent(controller: NSFetchedResultsController) {   }
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {   }
 }
 
 // MARK: - Additional Methods
@@ -140,7 +140,7 @@ extension PhotoViewController {
     }
     
     // Sets cell image to placeholder or downloaded image
-    func assignCellImage(cell: CollectionViewCell, photo: Photo) {
+    func assignCellImage(_ cell: CollectionViewCell, photo: Photo) {
         cell.activityView.startAnimating()
         
         if photo.locationImage == nil {
@@ -148,12 +148,12 @@ extension PhotoViewController {
         } else {
             cell.photoView.image = photo.locationImage
             cell.activityView.stopAnimating()
-            cell.activityView.hidden = true
+            cell.activityView.isHidden = true
         }
     }
     
     // Fetch images from Flickr using pin coordinates
-    func newFlickrCollection(pin: Pin) {
+    func newFlickrCollection(_ pin: Pin) {
         FlickrClient.sharedInstance().getFlickrPhotos(selectedPin.latitude as Double, longitude: selectedPin.longitude as Double, page: selectedPin.page) { photosArray, error in
             if let error = error {
                 print("error code: \(error.code)")
@@ -161,7 +161,7 @@ extension PhotoViewController {
             } else {
                 if let photosArray = photosArray as? [[String : AnyObject]] {
                     if photosArray.count == 0 {
-                        dispatch_async(dispatch_get_main_queue()) {
+                        DispatchQueue.main.async {
                             CoreDataStackManager.sharedInstance().saveContext()
                         }
                         return
@@ -176,31 +176,33 @@ extension PhotoViewController {
                             }
                         }
                         // Init the Photo object
-                        let photo = Photo(pin: pin, dictionary: dictionary, context: self.sharedContext)
+                        let photo = Photo(pin: pin, dictionary: dictionary as [String : AnyObject], context: self.sharedContext)
                         
-                        dispatch_async(dispatch_get_main_queue()) {
+                        DispatchQueue.main.async {
                             photo.pin = pin
                         }
                         
                         // Get that image on a background thread
                         let session = FlickrClient.sharedInstance().session
-                        let url = NSURL(string: photo.imageURL)!
+                        let url = URL(string: photo.imageURL)!
                         
-                        let task = session.dataTaskWithURL(url) { data, response, error in
+                        let task = session.dataTask(with: url, completionHandler: { data, response, error in
                             if let error = error {
-                                print("error code: \(error.code)")
-                                print("error description: \(error.localizedDescription)")                            }
+
+                                print("error description: \(error.localizedDescription)")
+                            
+                            }
                             else {
                                 let image = UIImage(data: data!)
                                 
-                                dispatch_async(dispatch_get_main_queue()) {
+                                DispatchQueue.main.async {
                                     photo.locationImage = image
                                     CoreDataStackManager.sharedInstance().saveContext()
                                     
                                     self.collectionView.reloadData()
                                 }
                             }
-                        }
+                        }) 
                         task.resume()
                         
                         return photo
@@ -212,25 +214,25 @@ extension PhotoViewController {
     
     // Delete current collection of downloaded photos
     func deleteCurrentCollection() {
-        for photo in fetchedResultsController.fetchedObjects as! [Photo] {
+        for photo in fetchedResultsController.fetchedObjects as [Photo]! {
             // Remove from documents directory
             photo.locationImage = nil
             // Remove reference from core data and save
-            self.sharedContext.deleteObject(photo)
+            self.sharedContext.delete(photo)
             CoreDataStackManager.sharedInstance().saveContext()
         }
     }
     
     // Support for deleting a single photo
-    func deleteSinglePhoto(indexPath: NSIndexPath) {
+    func deleteSinglePhoto(_ indexPath: IndexPath) {
         // Define selected photo
-        let selectedPhoto = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        let selectedPhoto = fetchedResultsController.object(at: indexPath) 
         
         // Remove photo from Documents Directory
         selectedPhoto.locationImage = nil
         
         // Delete from Core Data and save
-        sharedContext.deleteObject(selectedPhoto)
+        sharedContext.delete(selectedPhoto)
         CoreDataStackManager.sharedInstance().saveContext()
         
         // Reload collection view data
@@ -238,14 +240,14 @@ extension PhotoViewController {
     }
     
     // Displays confirmation alert for deleting a photo.
-    func displayAlert(indexPath: NSIndexPath) {
-        let alertController = UIAlertController(title: "Confirm", message: "Are you sure you want to permanently delete this photo?", preferredStyle: .Alert)
-        let okAction = UIAlertAction (title: "OK", style: UIAlertActionStyle.Default, handler: { (alertController) -> Void in
+    func displayAlert(_ indexPath: IndexPath) {
+        let alertController = UIAlertController(title: "Confirm", message: "Are you sure you want to permanently delete this photo?", preferredStyle: .alert)
+        let okAction = UIAlertAction (title: "OK", style: UIAlertActionStyle.default, handler: { (alertController) -> Void in
             self.deleteSinglePhoto(indexPath)
         })
-        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel, handler: nil)
+        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil)
         alertController.addAction(okAction)
         alertController.addAction(cancelAction)
-        self.presentViewController(alertController, animated: true, completion: nil)
+        self.present(alertController, animated: true, completion: nil)
     }
 }

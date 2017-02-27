@@ -12,32 +12,32 @@ class FlickrClient: NSObject {
 
 // MARK: - Variables
     
-    var session: NSURLSession
+    var session: URLSession
     
-    typealias CompletionHander = (result: AnyObject!, error: NSError?) -> Void
+    typealias CompletionHander = (_ result: AnyObject?, _ error: NSError?) -> Void
     
     override init() {
-        session = NSURLSession.sharedSession()
+        session = URLSession.shared
         super.init()
     }
     
 // MARK: - Methods
     
     // Task for 'Get' network call
-    func taskForGetMethod(parameters: [String : AnyObject], completionHandler: CompletionHander) -> NSURLSessionDataTask {
+    func taskForGetMethod(_ parameters: [String : AnyObject], completionHandler: @escaping CompletionHander) -> URLSessionDataTask {
         // Build the URL and make the request
         let urlString = FlickrClient.BaseUrls.BaseUrl + FlickrClient.escapedParameters(parameters)
-        let url = NSURL(string: urlString)!
-        let request = NSURLRequest(URL: url)
+        let url = URL(string: urlString)!
+        let request = URLRequest(url: url)
     
-        let task = session.dataTaskWithRequest(request) {data, response, error in
+        let task = session.dataTask(with: request, completionHandler: {data, response, error in
             if let error = error {
-                let newError = self.errorForData(data, response: response, error: error)
-                completionHandler(result: nil, error: newError)
+                let newError = self.errorForData(data, response: response, error: error as NSError)
+                completionHandler(nil, newError)
             } else {
                 FlickrClient.parseJSONWithCompletionHandler(data!, completionHandler: completionHandler)
             }
-        }
+        }) 
         // Start the request
         task.resume()
     
@@ -45,7 +45,7 @@ class FlickrClient: NSObject {
     }
     
     // Bounding box
-    func createBoundingBoxString(latitude: Double, longitude: Double) -> String {
+    func createBoundingBoxString(_ latitude: Double, longitude: Double) -> String {
         // Fix added to ensure box is bounded by minimum and maximums
         let bottom_left_lon = max(longitude - BoundingBox.BoundingBoxHalfWidth, BoundingBox.LonMin)
         let bottom_left_lat = max(latitude - BoundingBox.BoundingBoxHalfHeight, BoundingBox.LatMin)
@@ -56,8 +56,8 @@ class FlickrClient: NSObject {
     }
     
     // For error debugging
-    func errorForData(data: NSData?, response: NSURLResponse?, error: NSError) -> NSError {
-        if let parsedResult = (try? NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as? [String : AnyObject] {
+    func errorForData(_ data: Data?, response: URLResponse?, error: NSError) -> NSError {
+        if let parsedResult = (try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)) as? [String : AnyObject] {
             
             if let errorMessage = parsedResult[JsonResponseKeys.StatusMessage] as? String {
                 let userInfo = [NSLocalizedDescriptionKey : errorMessage]
@@ -69,26 +69,26 @@ class FlickrClient: NSObject {
     }
     
     // Parsing the JSON
-    class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {
+    class func parseJSONWithCompletionHandler(_ data: Data, completionHandler: CompletionHander) {
         var parsingError: NSError? = nil
         
         let parsedResult: AnyObject?
         do {
-            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+            parsedResult = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as AnyObject
         } catch let error as NSError {
             parsingError = error
             parsedResult = nil
         }
         
         if let error = parsingError {
-            completionHandler(result: nil, error: error)
+            completionHandler(nil, error)
         } else {
-            completionHandler(result: parsedResult, error: nil)
+            completionHandler(parsedResult, nil)
         }
     }
     
     // Helper function: Given a dictionary of parameters, convert to a string for a url
-    class func escapedParameters(parameters: [String : AnyObject]) -> String {
+    class func escapedParameters(_ parameters: [String : AnyObject]) -> String {
         var urlVars = [String]()
         
         for (key, value) in parameters {
@@ -96,12 +96,12 @@ class FlickrClient: NSObject {
             let stringValue = "\(value)"
             
             // Escape it
-            let escapedValue = stringValue.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet())
+            let escapedValue = stringValue.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)
             
             // Append it
             urlVars += [key + "=" + "\(escapedValue!)"]
         }
-        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joined(separator: "&")
     }
 
 // MARK: - Shared Instance

@@ -23,23 +23,23 @@ class Photo: NSManagedObject {
     @NSManaged var pin: Pin
     @NSManaged var imageID: String
     @NSManaged var imageURL: String
-    @NSManaged var dateAdded: NSDate
+    @NSManaged var dateAdded: Date
     
     // Core Data init method
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
     }
     
     init(pin: Pin, dictionary: [String: AnyObject], context: NSManagedObjectContext) {
         // Get the entity associated with "Photo" type.
-        let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
+        let entity =  NSEntityDescription.entity(forEntityName: "Photo", in: context)!
         // Inherited init method
-        super.init(entity: entity,insertIntoManagedObjectContext: context)
+        super.init(entity: entity,insertInto: context)
         // Init dictionary properties
         self.pin = pin
         imageID = dictionary[Photo.Keys.ImageID] as! String
         imageURL = dictionary[Photo.Keys.ImageURL] as! String
-        dateAdded = NSDate()
+        dateAdded = Date()
     }
     
     // Cached image
@@ -54,11 +54,11 @@ class Photo: NSManagedObject {
     
     //Delete the associated image file when the Photo managed object is deleted.
     override func prepareForDeletion() {
-        let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
+        let dirPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] 
         let pathArray = [dirPath, imageID]
-        let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+        let fileURL = NSURL.fileURL(withPathComponents: pathArray)
         do {
-            try NSFileManager.defaultManager().removeItemAtURL(fileURL)
+            try FileManager.default.removeItem(at: fileURL!)
         } catch _ {
         }
     }

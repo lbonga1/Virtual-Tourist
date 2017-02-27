@@ -11,7 +11,7 @@ import Foundation
 extension FlickrClient {
     
     // Flickr API call to get photos using location coordinates
-    func getFlickrPhotos(latitude: Double, longitude: Double, page: Float, completionHandler: (result: AnyObject?, error: NSError?) -> Void) {
+    func getFlickrPhotos(_ latitude: Double, longitude: Double, page: Float, completionHandler: @escaping (_ result: AnyObject?, _ error: NSError?) -> Void) {
         // Set the parameters
         let parameters = [
             MethodKeys.Method: Methods.PhotoSearch,
@@ -25,28 +25,28 @@ extension FlickrClient {
             MethodKeys.Page: String(stringInterpolationSegment: page)
         ]
         // Make the request
-        taskForGetMethod(parameters) { JsonResult, error in
+        taskForGetMethod(parameters as [String : AnyObject]) { JsonResult, error in
             if let error = error {
                 print("error code: \(error.code)")
                 print("error description: \(error.localizedDescription)")
-                completionHandler(result: nil, error: NSError(domain: "getFlickrPhotos", code: 1, userInfo: [NSLocalizedDescriptionKey: "Network Error"]))
+                completionHandler(nil, NSError(domain: "getFlickrPhotos", code: 1, userInfo: [NSLocalizedDescriptionKey: "Network Error"]))
             } else {
-                if let successMessage = JsonResult.valueForKey(JsonResponseKeys.SuccessMessage) as? String {
+                if let successMessage = JsonResult?.value(forKey: JsonResponseKeys.SuccessMessage) as? String {
                     if successMessage == "ok" {
-                        if let photosDictionary = JsonResult.valueForKey(JsonResponseKeys.PhotosDictionary) as? [String: AnyObject] {
+                        if let photosDictionary = JsonResult?.value(forKey: JsonResponseKeys.PhotosDictionary) as? [String: AnyObject] {
                             if let photosArray = photosDictionary[JsonResponseKeys.PhotosArray] as? [[String: AnyObject]] {
-                                completionHandler(result: photosArray, error: nil)
+                                completionHandler(photosArray as AnyObject?, nil)
                             } else {
-                                completionHandler(result: nil, error: NSError(domain: "getFlickrPhotos", code: 5, userInfo: [NSLocalizedDescriptionKey: "Could not find photos array"]))
+                                completionHandler(nil, NSError(domain: "getFlickrPhotos", code: 5, userInfo: [NSLocalizedDescriptionKey: "Could not find photos array"]))
                             }
                         } else {
-                            completionHandler(result: nil, error: NSError(domain: "getFlickrPhotos", code: 4, userInfo: [NSLocalizedDescriptionKey: "Could not find photos dictionary"]))
+                            completionHandler(nil, NSError(domain: "getFlickrPhotos", code: 4, userInfo: [NSLocalizedDescriptionKey: "Could not find photos dictionary"]))
                         }
                     } else {
-                        completionHandler(result: nil, error: NSError(domain: "getFlickrPhotos", code: 3, userInfo: [NSLocalizedDescriptionKey: "Server Error"]))
+                        completionHandler(nil, NSError(domain: "getFlickrPhotos", code: 3, userInfo: [NSLocalizedDescriptionKey: "Server Error"]))
                     }
                 } else {
-                    completionHandler(result: nil, error: NSError(domain: "getFlickrPhotos", code: 2, userInfo: [NSLocalizedDescriptionKey: "Server Error"]))
+                    completionHandler(nil, NSError(domain: "getFlickrPhotos", code: 2, userInfo: [NSLocalizedDescriptionKey: "Server Error"]))
                 }
             }
         }
